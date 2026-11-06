@@ -195,6 +195,15 @@ table.calct td.m{font-family:Consolas,monospace}
 #teacher table{border-collapse:collapse;width:100%;background:#fff}
 #teacher th,#teacher td{border:1px solid var(--line);padding:6px 10px;text-align:left;font-size:14px}
 #teacher th{background:#eef2f7}
+.trow{cursor:pointer}.trow:hover{background:#f0fdfa}
+.un{color:#9ca3af}.okc{color:var(--ok)}.ngc{color:var(--ng)}
+.dgoals{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 14px;margin:8px 0}
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+.dcard{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.dcard .dh{display:flex;justify-content:space-between;margin-bottom:4px}.dcard .own{font-size:12.5px;color:var(--sub)}
+.dcard .ds{font-size:13px;line-height:1.6;margin-bottom:6px}
+.tlog{background:#0c0c0c;color:#d4d4d4;border-radius:8px;padding:8px 10px;font-family:Consolas,"MS Gothic",monospace;font-size:12px;line-height:1.45;white-space:pre-wrap;word-break:break-all;height:210px;overflow:auto}
+@media(max-width:900px){.dgrid{grid-template-columns:1fr}}
 .pb{height:8px;background:#e5e7eb;border-radius:99px;overflow:hidden;width:120px;display:inline-block;vertical-align:middle;margin-right:6px}
 .pb i{display:block;height:100%;background:var(--accent2)}
 </style>
@@ -225,9 +234,9 @@ table.calct td.m{font-family:Consolas,monospace}
 <label>チーム番号<select id="lg-team"></select></label>
 <button class="btn" style="width:100%;padding:10px" onclick="doJoin()">入室する</button>
 <div id="lg-msg"></div><div class="note" id="lg-mode"></div></div></div>
-<div id="teacher"><h1>👩‍🏫 先生用：チーム進行状況</h1><p class="note" id="t-mode"></p>
+<div id="teacher"><div id="t-detail" style="display:none"></div><div id="t-list"><h1>👩‍🏫 先生用：チーム進行状況</h1><p class="note" id="t-mode"></p><p class="note">チームの行をクリックすると、その2人の作業画面（設定とターミナル）を見られます。</p>
 <table><thead><tr><th>チーム</th><th>A（サーバ・PC①）</th><th>B（ルータ・PC②）</th><th>いまのステージ</th><th>進み具合</th><th>このステージの経過</th><th>ヒント計</th><th>合計点</th><th></th></tr></thead><tbody id="t-body"></tbody></table>
-<p><button class="btn ghost" onclick="resetAllTeams()">全チームをリセット</button></p></div>
+<p><button class="btn ghost" onclick="resetAllTeams()">全チームをリセット</button></p></div></div>
 <script>
 // ===ENGINE START
 const DEVS={
@@ -1608,6 +1617,8 @@ function enterTeam(team,name,role){
     if(v&&prev&&v.phase!==prev.phase){Object.keys(TERM).forEach(k=>TERM[k]=[]);toast(curStage()?'ステージ '+(v.phase+1)+'：'+curStage().title:'🎓 全ステージクリア！');}
     renderPair();evaluate();});
   setInterval(()=>dbSet('teams/'+ME.team+'/members/'+ME.role+'/seen',Date.now()),15000);
+  const lastTerm={};
+  setInterval(()=>{OWN[ME.role].forEach(id=>{const l=TERM[id].slice(-80),j=JSON.stringify(l);if(j!==lastTerm[id]){lastTerm[id]=j;dbSet('teams/'+ME.team+'/term/'+id,l.length?l:null);}});},1500);
   renderAll();
 }
 function leaveTeam(){try{localStorage.removeItem(SKEY);}catch(e){}location.reload();}
@@ -1615,6 +1626,7 @@ function leaveTeam(){try{localStorage.removeItem(SKEY);}catch(e){}location.reloa
 // ---------- 先生用画面 ----------
 let TALL={};
 function renderTeacher(){
+  if(TOPEN){renderDetail();return;}
   const ids=Object.keys(TALL).sort((a,b)=>+a-+b);
   const rows=ids.map(id=>{
     const t=TALL[id]||{},m=t.members||{},p=t.prog||{},st=p.phase!=null&&p.phase<STAGES.length?STAGES[p.phase]:null;
@@ -1622,10 +1634,56 @@ function renderTeacher(){
     const tag=n=>m[n]?esc(m[n].name)+(online(m[n])?' 🟢':' ⚪'):'—';
     const status=p.phase==null?(m.A&&m.B?'開始待ち':'人数待ち'):(p.finishedAt?'🎓 完了':(st.fault?'⚠ ':'')+esc(st.title));
     const prog=p.phase==null?0:Math.min(p.phase,STAGES.length);
-    return {id,html:'<tr><td>'+id+'</td><td>'+tag('A')+'</td><td>'+tag('B')+'</td><td>'+status+'</td><td><div class="pb"><i style="width:'+Math.round(prog/STAGES.length*100)+'%"></i></div>'+prog+'/'+STAGES.length+'</td><td>'+(p.stageStart&&st?fmt((Date.now()-p.stageStart)/1000):'—')+'</td><td>'+hints+'</td><td><b>'+(p.total||0)+'</b></td><td><button class="btn ghost" onclick="resetTeam(\''+id+'\')">リセット</button></td></tr>',total:p.total||0,prog};
+    return {id,html:'<tr class="trow" onclick="openTeam(\''+id+'\')"><td>'+id+'</td><td>'+tag('A')+'</td><td>'+tag('B')+'</td><td>'+status+'</td><td><div class="pb"><i style="width:'+Math.round(prog/STAGES.length*100)+'%"></i></div>'+prog+'/'+STAGES.length+'</td><td>'+(p.stageStart&&st?fmt((Date.now()-p.stageStart)/1000):'—')+'</td><td>'+hints+'</td><td><b>'+(p.total||0)+'</b></td><td><button class="btn ghost" onclick="event.stopPropagation();resetTeam(\''+id+'\')">リセット</button></td></tr>',total:p.total||0,prog};
   });
   rows.sort((a,b)=>b.prog-a.prog||b.total-a.total);
   $('t-body').innerHTML=rows.map(r=>r.html).join('')||'<tr><td colspan="9" class="note">まだ入室したチームはありません。</td></tr>';
+}
+
+let TOPEN=null;
+function openTeam(id){TOPEN=id;$('t-list').style.display='none';$('t-detail').style.display='block';renderDetail();}
+function closeTeam(){TOPEN=null;$('t-detail').style.display='none';$('t-list').style.display='block';renderTeacher();}
+function devSummary(id,d){
+  const f=x=>x?esc(x):'<span class="un">（未設定）</span>';
+  if(id==='router')return '<div>ポート1：'+f(d.if1.ip)+' ／ '+f(d.if1.mask)+'</div><div>ポート2：'+f(d.if2.ip)+' ／ '+f(d.if2.mask)+'</div><div>IPルーティング：'+(d.fwd?'<b class="okc">ON</b>':'<b class="ngc">OFF</b>')+'</div>';
+  let h='';
+  if(id==='server'){
+    h+='<div>IP：'+f(d.ip)+' ／ '+f(d.mask)+'</div><div>ゲートウェイ：'+f(d.gw)+'</div>';
+    const dh=d.dhcp;h+='<div>DHCP：'+(dh.on?'<b class="okc">有効</b>　'+f(dh.start)+' 〜 '+f(dh.end)+'　マスク '+f(dh.mask)+'　GW '+f(dh.gw):'<span class="un">無効</span>')+'</div>';
+    return h;
+  }
+  if(d.mode==='dhcp'){
+    const l=d.lease;h+='<div>IP：<b>自動取得</b>'+(l?'　→ '+esc(l.ip)+' ／ '+esc(l.mask)+'　GW '+(l.gw?esc(l.gw):'<span class="un">（なし）</span>'):'　<span class="ngc">（取得できていない）</span>')+'</div>';
+    return h;
+  }
+  return '<div>IP：'+f(d.ip)+' ／ '+f(d.mask)+'</div><div>ゲートウェイ：'+f(d.gw)+'</div>';
+}
+function renderDetail(){
+  const id=TOPEN,t=TALL[id];
+  if(!t){closeTeam();return;}
+  const m=t.members||{},p=t.prog||{},st=p.phase!=null&&p.phase<STAGES.length?STAGES[p.phase]:null;
+  const base=blankDevs(),dev={};Object.keys(DEVS).forEach(k=>{dev[k]=dmerge(base[k],(t.dev||{})[k]);});
+  const Sx={dev};
+  const tag=n=>m[n]?esc(m[n].name)+(online(m[n])?' 🟢':' ⚪'):'—';
+  const flags=p.flags||{};
+  let goals='';
+  if(st){
+    goals='<ul class="goals">'+st.cfg.map(g=>{let ok=false;try{ok=g.ok(Sx);}catch(e){}return '<li class="'+(ok?'ok':'')+'"><span class="mk">'+(ok?'✓':'')+'</span><span>'+(g.owner==='both'?'':'<b>['+g.owner+']</b> ')+esc(g.t)+'</span></li>';}).join('')+
+      st.pings.map(g=>{const ok=!!flags[flagKey(st,g)];return '<li class="'+(ok?'ok':'')+'"><span class="mk">'+(ok?'✓':'')+'</span><span><b>['+g.owner+']</b> '+esc(g.t)+'</span></li>';}).join('')+'</ul>';
+  }
+  const hc=st?((p.hints||{})[st.key]||0):0;
+  const owners={router:'B',server:'A',pc1:'A',pc2:'B'};
+  const cards=['server','pc1','router','pc2'].map(k=>{
+    let lines=(t.term||{})[k]||[];if(!Array.isArray(lines))lines=Object.values(lines);
+    return '<div class="dcard"><div class="dh"><b>'+DEVS[k].label+'</b><span class="own">担当 '+owners[k]+'：'+esc(((m[owners[k]]||{}).name)||'—')+'</span></div><div class="ds">'+devSummary(k,dev[k])+'</div><div class="tlog" data-k="'+k+'">'+(lines.length?esc(lines.slice(-18).join('\n')):'<span class="un">（まだ操作がありません）</span>')+'</div></div>';
+  }).join('');
+  const ts=document.querySelectorAll('#t-detail .tlog');const keep={};ts.forEach(e=>{keep[e.dataset.k]=e.scrollTop+e.clientHeight>=e.scrollHeight-8;});
+  $('t-detail').innerHTML='<p><button class="btn ghost" onclick="closeTeam()">← 一覧に戻る</button></p>'+
+    '<h2 style="margin:6px 0">チーム '+id+'　<small>A：'+tag('A')+'　B：'+tag('B')+'</small></h2>'+
+    '<div class="timerbar">'+(st?(st.fault?'⚠ ':'')+'ステージ '+(p.phase+1)+'：'+esc(st.title)+'　⏱ '+fmt((Date.now()-p.stageStart)/1000)+'　💡 ヒント '+hc+'回':(p.finishedAt?'🎓 全ステージ完了':'開始前'))+'　合計 <b>'+(p.total||0)+'</b> 点</div>'+
+    (goals?'<div class="dgoals"><b>達成条件の状況</b>'+goals+'</div>':'')+
+    '<div class="dgrid">'+cards+'</div><p class="note">各機器の設定と、直近のターミナル操作です（自動更新）。担当機器の設定は、本人の画面と同じ内容です。</p>';
+  document.querySelectorAll('#t-detail .tlog').forEach(e=>{e.scrollTop=e.scrollHeight;});
 }
 function resetTeam(id){if(confirm('チーム '+id+' を、入室状態も含めて削除します。よろしいですか？'))dbRemove('teams/'+id);}
 function resetAllTeams(){if(confirm('全チームのデータを削除します。よろしいですか？'))dbRemove('teams');}

@@ -1313,11 +1313,13 @@ const row=(a,b)=>`<tr><td>${a}</td><td class="m">${b}</td></tr>`;
 const tbl=rows=>'<table class="sheet"><tr><th>項目</th><th>値</th></tr>'+rows.join('')+'</table>';
 const reach=(S,src,dst)=>{const r=ping1(S,src,dst);return !!r.ok&&!r.conflict;};
 const leaseIp=S=>{const l=S.dev.pc1.lease;return l&&S.dev.pc1.mode==='dhcp'?l.ip:null;};
-const reach4=S=>{const l=leaseIp(S);return conflicts(S).length===0&&reach(S,'pc1',SP.sv)&&reach(S,'pc1',SP.pc2)&&reach(S,'pc2',SP.sv)&&!!l&&reach(S,'pc2',l);};
+const p1ip=S=>{const e=eff(S,'pc1').ifs[0];return e&&e.ip&&!eff(S,'pc1').apipa?e.ip:null;};
+const reach4=S=>{const l=p1ip(S);return conflicts(S).length===0&&reach(S,'pc1',SP.sv)&&reach(S,'pc1',SP.pc2)&&reach(S,'pc2',SP.sv)&&!!l&&reach(S,'pc2',l);};
 const PG=(id,owner,src,dst,t)=>({id,owner,src,dst,t});
 const FAULT_PINGS=[PG('p1','A','pc1',SP.sv,'PC① から サーバ へ ping で返事が来る'),PG('p2','A','pc1',SP.pc2,'PC① から PC② へ ping で返事が来る'),
-  PG('p3','B','pc2',SP.sv,'PC② から サーバ へ ping で返事が来る'),PG('p4','B','pc2',S=>leaseIp(S),'PC② から PC①（いま取得中のアドレス）へ ping で返事が来る')];
-const FAULT_CFG=[{id:'c1',owner:'both',t:'ネットワーク全体で、4つの経路がすべて通っている',ok:S=>reach4(S)}];
+  PG('p3','B','pc2',SP.sv,'PC② から サーバ へ ping で返事が来る'),PG('p4','B','pc2',S=>p1ip(S),'PC② から PC①（いま取得中のアドレス）へ ping で返事が来る')];
+const FAULT_CFG=[{id:'c1',owner:'both',t:'ネットワーク全体で、4つの経路がすべて通っている',ok:S=>reach4(S)},
+  {id:'c2',owner:'A',t:'PC①は「自動取得（DHCP）」のまま、サーバからアドレスをもらえている（固定IPに変えない）',ok:S=>S.dev.pc1.mode==='dhcp'&&!!S.dev.pc1.lease&&S.dev.server.dhcp.on&&inPool(S)}];
 const STAGES=[
 {key:'s1',title:'LANを作る',kind:'build',base:100,secPer:12,
  sheet:{A:sheet('A：サーバ・PC①担当','LAN1（経理・サーバ室）を作る',tbl([row('LAN1 のネットワーク','192.168.1.0 ／ マスク 255.255.255.0'),row('サーバ','192.168.1.10'),row('PC①','192.168.1.11'),row('ルータ ポート1（LAN1側）','192.168.1.1　※ルータ担当のBさんに伝える')]),'LAN2（営業部）は、Bさんの担当です。向こうのアドレスは、Bさんに聞いてください。'),
@@ -1343,15 +1345,15 @@ const STAGES=[
         PG('p3','B','pc2',S=>leaseIp(S),'PC② から PC①（取得したアドレス）へ ping で返事が来る'),PG('p4','B','router',S=>leaseIp(S),'ルータ から PC①（取得したアドレス）へ ping で返事が来る')],
  hints:['DHCPの設定は、サーバ側（配る側）と、PC側（もらう側）の両方で必要です。','サーバの「適用」でメッセージが出たら、よく読もう。配布範囲に、固定で使っているアドレス（ルータ・サーバ）は含められません。','PC①が 169.254… のままなら、DHCPサービスが有効か確認して、ターミナルで <code>ipconfig /renew</code>。','別のネットワークと通信できないなら、<b>配るゲートウェイ</b>が空ではないか確認。変えたら、PC①で <code>ipconfig /renew</code>。','【答え】DHCP有効／範囲 192.168.1.100〜150／マスク 255.255.255.0／ゲートウェイ 192.168.1.1／PC①は「自動的に取得」→ ipconfig /renew。']},
 {key:'f1',title:'故障①',kind:'fault',fault:true,base:100,secPer:8,
- sheet:{A:`<div class="tbox do"><b>🚨 障害報告</b><p>運用担当から連絡です。「<b>サーバ・PC①・PC②の間で、通信できない経路がある</b>」。さっきまでは、ぜんぶ動いていたはずです。</p><p>下の<b>4つの経路</b>が通るように、原因を見つけて直してください。自分の担当機器だけでなく、<b>相手と情報を出し合って</b>調べましょう。</p></div>`},
+ sheet:{A:`<div class="tbox do"><b>🚨 障害報告</b><p>運用担当から連絡です。「<b>サーバ・PC①・PC②の間で、通信できない経路がある</b>」。さっきまでは、ぜんぶ動いていたはずです。</p><p>下の<b>4つの経路</b>が通るように、原因を見つけて直してください。<b>条件：PC①はDHCP（自動取得）のまま</b>で直すこと。自分の担当機器だけでなく、<b>相手と情報を出し合って</b>調べましょう。</p></div>`},
  cfg:FAULT_CFG,pings:FAULT_PINGS,
  hints:['まず、自分の担当機器から ping を打って、<b>どの経路が通らないか</b>を相手と共有しよう。','「General failure」は自分側の設定、「宛先ホストに到達できません」は、返事をした機器の先に相手がいないサインです。','自分の機器の <code>ipconfig</code>（ルータは <code>show ip interface brief</code>）を、最初に作った設定と見比べよう。','【答え】原因は2つ。①PC②のゲートウェイが 192.168.2.<b>2</b>（正：192.168.2.1）②DHCPで配るゲートウェイが空（正：192.168.1.1）→ サーバ側を直して、PC①で ipconfig /renew。']},
 {key:'f2',title:'故障②',kind:'fault',fault:true,base:100,secPer:8,
- sheet:{A:`<div class="tbox do"><b>🚨 障害報告（第2報）</b><p>「また通信できなくなった」。今度は<b>原因が複数</b>あるようです。4つの経路がすべて通るように直してください。</p><p class="note">1つ直すと、次の症状が見えてくることがあります。直しては確認、を繰り返しましょう。</p></div>`},
+ sheet:{A:`<div class="tbox do"><b>🚨 障害報告（第2報）</b><p>「また通信できなくなった」。今度は<b>原因が複数</b>あるようです。4つの経路がすべて通るように直してください。</p><p class="note"><b>条件：PC①はDHCP（自動取得）のまま直すこと。</b>固定IPに変えると成功になりません。1つ直すと、次の症状が見えてくることがあります。直しては確認、を繰り返しましょう。</p></div>`},
  cfg:FAULT_CFG,pings:FAULT_PINGS,
  hints:['4つの経路すべてが「タイムアウト」なら、<b>途中の機器</b>を疑おう。','「タイムアウト」は、行きと帰りのどちらで止まったか分かりません。両側の機器（ゲートウェイ・転送・マスク）を確認しよう。','マスクが違うと、「同じ町」の範囲が変わります。両側の <code>ipconfig</code> を見せ合おう。','【答え】原因は3つ。①ルータのIPルーティングが無効 ②サーバのゲートウェイが空（正：192.168.1.1）③PC②のサブネットマスクが 255.255.<b>0.0</b>（正：255.255.255.0）']},
 {key:'f3',title:'故障③',kind:'fault',fault:true,base:100,secPer:8,
- sheet:{A:`<div class="tbox do"><b>🚨 障害報告（最終）</b><p>「ネットワークがほぼ全滅」。<b>原因は4つ</b>、どれも担当機器の設定ミスです。4つの経路がすべて通るように直してください。</p><p class="note">アドレスの重複や、台帳と違うIPアドレスにも注意しよう。</p></div>`},
+ sheet:{A:`<div class="tbox do"><b>🚨 障害報告（最終）</b><p>「ネットワークがほぼ全滅」。<b>原因は4つ</b>、どれも担当機器の設定ミスです。4つの経路がすべて通るように直してください。</p><p class="note"><b>条件：PC①はDHCP（自動取得）のまま直すこと。</b>アドレスの重複や、台帳と違うIPアドレスにも注意しよう。</p></div>`},
  cfg:FAULT_CFG,pings:FAULT_PINGS,
  hints:['まず、自分の担当機器の設定を、最初に作った設定と1項目ずつ見比べよう。','同じアドレスを2台が使うと、ping が成功したり失敗したりします。構成図に ⚠ が出ていませんか？','ルータのポートのアドレスが違うと、ゲートウェイの番地に誰もいなくなります。PC②の出口は、正しいアドレスを指していますか？','【答え】原因は4つ。①ルータのポート2が 192.168.2.<b>254</b>（正：192.168.2.1）②サーバのIPアドレスが 192.168.1.<b>100</b>（正：192.168.1.10。PC①と重複）③DHCPで配るゲートウェイが空 ④PC②のIPアドレスが 192.168.<b>1</b>.21（正：192.168.2.21）']}
 ];

@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>先生用｜ネットワーク実習【ペア対戦】</title>
+<style>
+:root{
+  --bg:#f3f5fa;--card:#fff;--ink:#1f2937;--sub:#6b7280;--line:#dfe3ec;
+  --navy:#12263f;--accent:#0f766e;--accent2:#14b8a6;--ok:#16a34a;--ng:#dc2626;--warn:#d97706;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Yu Gothic UI","Hiragino Sans","Meiryo",system-ui,sans-serif;font-size:15px;line-height:1.6}
+header{background:var(--navy);color:#fff;padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+header h1{font-size:17px;margin:0;font-weight:700;letter-spacing:.02em}
+.badge{background:var(--accent);padding:2px 10px;border-radius:99px;font-size:12px}
+header .sp{flex:1}
+header button{background:transparent;color:#cbd5e1;border:1px solid #475569;border-radius:6px;padding:3px 10px;cursor:pointer;font-size:12px}
+header button:hover{background:#1e3a5f}
+.hintcnt{font-size:12px;color:#cbd5e1}
+main{display:grid;gap:14px;padding:14px;max-width:1280px;margin:0 auto;
+  grid-template-columns:minmax(300px,400px) 1fr;grid-template-areas:"mission diagram" "mission panel"}
+#mission{grid-area:mission}#diagramwrap{grid-area:diagram}#panel{grid-area:panel}
+@media(max-width:860px){main{grid-template-columns:1fr;grid-template-areas:"mission" "diagram" "panel"}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.dots{display:flex;gap:6px;margin-bottom:8px;align-items:center;flex-wrap:wrap}
+.dots .lab{font-size:12px;color:var(--sub);margin-right:4px}
+.dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--line);background:#fff;font-size:12px;font-weight:700;
+  color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.dot.cur{border-color:var(--accent);color:var(--accent)}
+.dot.done{background:var(--ok);border-color:var(--ok);color:#fff}
+#mission h2{margin:2px 0 6px;font-size:18px;color:var(--navy)}
+.story{background:#f0fdfa;border-left:4px solid var(--accent2);padding:8px 12px;border-radius:0 8px 8px 0;margin:6px 0 10px;font-size:14px}
+h3{font-size:13px;margin:12px 0 4px;color:var(--sub);letter-spacing:.05em}
+table.sheet{border-collapse:collapse;width:100%;font-size:12.5px}
+table.sheet th,table.sheet td{border:1px solid var(--line);padding:3px 6px;text-align:left}
+table.sheet th{background:#f3f5fa}
+table.sheet td.m{font-family:Consolas,monospace}
+.note{font-size:12.5px;color:var(--sub);margin:4px 0}
+ul.goals{list-style:none;margin:0;padding:0}
+ul.goals li{display:flex;gap:8px;padding:4px 0;font-size:13.5px;border-bottom:1px dashed var(--line)}
+ul.goals .mk{flex:0 0 20px;height:20px;border-radius:50%;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;margin-top:2px}
+ul.goals li.ok .mk{background:var(--ok);border-color:var(--ok)}
+ul.goals li.ok{color:var(--sub)}
+code,.mono{font-family:Consolas,"MS Gothic",monospace;background:#eef2f7;padding:0 4px;border-radius:4px;font-size:.95em}
+.hintbox{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:6px 10px;margin:4px 0;font-size:13.5px}
+button.btn{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:7px 14px;cursor:pointer;font-size:14px;font-family:inherit}
+button.btn:hover{filter:brightness(1.1)}
+button.btn.ghost{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+button.btn:disabled{opacity:.5;cursor:default}
+.clear{background:#ecfdf5;border:2px solid var(--ok);border-radius:10px;padding:10px 12px;margin-top:12px}
+.clear h4{margin:0 0 4px;color:var(--ok);font-size:16px}
+.real{background:#fff;border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:13.5px}
+.real b{color:var(--accent)}
+/* diagram */
+#diagram{width:100%;height:auto;display:block}
+#diagram g.node{cursor:pointer}
+#diagram .nbox{fill:#fff;stroke:#94a3b8;stroke-width:2}
+#diagram g.node.sel .nbox{stroke:var(--accent);stroke-width:4}
+#diagram g.node.conf .nbox{stroke:var(--ng);stroke-width:4}
+#diagram g.node.flash-ok .nbox{stroke:var(--ok);stroke-width:6;fill:#ecfdf5}
+#diagram g.node.flash-ng .nbox{stroke:var(--ng);stroke-width:6;fill:#fef2f2}
+#diagram text{font-family:inherit}
+#diagram .link{stroke:#64748b;stroke-width:3;fill:none}
+#diagram .lan{font-size:12px;fill:var(--sub)}
+.dim{opacity:.3}
+/* panel */
+#tabs{display:flex;gap:6px;flex-wrap:wrap}
+#tabs button{border:1px solid var(--line);background:#fff;border-radius:8px 8px 0 0;padding:6px 14px;cursor:pointer;font-size:14px;font-family:inherit}
+#tabs button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+#tabs .st{display:inline-block;width:8px;height:8px;border-radius:50%;background:#cbd5e1;margin-right:6px}
+#tabs .st.conf{background:var(--ng)}
+#viewsw{display:flex;gap:6px;margin:10px 0}
+#viewsw button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:3px 14px;cursor:pointer;font-size:13px;font-family:inherit}
+#viewsw button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.win{border:1px solid #7a8aa3;background:#f0f0f0;border-radius:4px;max-width:560px;box-shadow:2px 3px 8px #0002;margin-bottom:10px}
+.win .wt{background:linear-gradient(#e8eef8,#cfdaec);padding:4px 10px;font-size:12.5px;border-bottom:1px solid #9fb0c8}
+.win .wb{padding:10px 14px}
+.win .wf{padding:8px 14px;text-align:right;border-top:1px solid #d0d0d0}
+.win label.r{display:block;margin:2px 0;font-size:13.5px}
+.fld{display:grid;grid-template-columns:190px 1fr;gap:4px 8px;align-items:center;margin:6px 0 6px 20px;font-size:13.5px}
+.fld.wide{margin-left:0;grid-template-columns:150px 1fr}
+.fld input[type=text]{font-family:Consolas,monospace;padding:3px 6px;border:1px solid #8a8a8a;border-radius:2px;width:100%;max-width:210px;font-size:14px}
+.fld input:disabled{background:#e4e4e4;color:#aaa}
+.win .sec{font-weight:700;font-size:13px;margin:10px 0 2px;color:#1e3a5f;border-bottom:1px solid #c6cfdd}
+.recrow{display:grid;grid-template-columns:1fr 150px;gap:6px;margin:3px 0}
+.recrow input{font-family:Consolas,monospace;padding:3px 6px;border:1px solid #8a8a8a;border-radius:2px;font-size:13px;width:100%}
+.msg{max-width:560px;border-radius:8px;padding:6px 10px;margin:6px 0;font-size:13.5px}
+.msg.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+.msg.okm{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46}
+.msg.warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+.term{background:#0c0c0c;color:#cccccc;border-radius:8px;padding:10px;font-family:Consolas,"MS Gothic",monospace;font-size:13px;
+  height:340px;overflow:auto;white-space:pre-wrap;word-break:break-all;cursor:text}
+.termin{display:flex;gap:6px;background:#0c0c0c;color:#ccc;padding:0 10px 10px;border-radius:0 0 8px 8px;margin-top:-6px;font-family:Consolas,"MS Gothic",monospace;font-size:13px}
+.termin input{flex:1;background:transparent;border:0;outline:0;color:#fff;font:inherit}
+.tip{font-size:12.5px;color:var(--sub);margin:6px 0}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:99px;
+  font-size:14px;opacity:0;pointer-events:none;transition:opacity .3s;z-index:9}
+#toast.show{opacity:1}
+
+/* tutorial */
+.tprog{font-size:12px;color:var(--sub)}
+.bar{height:6px;background:#e5e7eb;border-radius:99px;overflow:hidden;margin:4px 0 8px}
+.bar i{display:block;height:100%;background:var(--accent2)}
+h3.stt{font-size:16px;color:var(--navy);letter-spacing:0;margin:6px 0}
+.tbox{border-radius:8px;padding:8px 12px;margin:8px 0;font-size:14px}
+.tbox p{margin:4px 0}.tbox ul{margin:4px 0 4px 18px;padding:0}
+.tbox>b:first-child{display:block;font-size:13px;margin-bottom:2px}
+.tbox.why{background:#eff6ff;border-left:4px solid #3b82f6}
+.tbox.do{background:#f0fdfa;border-left:4px solid var(--accent2)}
+.tbox.pred{background:#faf5ff;border-left:4px solid #a855f7}
+.tbox.ans{background:#ecfdf5;border-left:4px solid var(--ok)}
+.opt{display:block;width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 10px;margin:4px 0;cursor:pointer;font-family:inherit;font-size:13.5px}
+.opt.sel{border-color:#a855f7;background:#f5f3ff}
+.opt.right{border-color:var(--ok);background:#ecfdf5}
+.opt.wrong{border-color:var(--ng);background:#fef2f2}
+.opt:disabled{cursor:default}
+.tnav{display:flex;gap:8px;margin-top:12px}
+.ipviz{margin:8px 0}
+.ipviz .row{margin:3px 0}
+.ipviz .o{display:inline-block;min-width:44px;text-align:center;padding:1px 6px;margin-right:4px;border-radius:6px;font-family:Consolas,monospace;font-weight:700}
+.ipviz .net,.o.net{background:#dbeafe;color:#1e40af}
+.ipviz .host,.o.host{background:#ffedd5;color:#9a3412}
+.ipviz .lb{font-size:12px;color:var(--sub);margin-left:6px}
+.ipviz .cap{font-size:12.5px;color:var(--sub);margin-top:4px}
+.tbox.chal{background:#fff7ed;border-left:4px solid #f97316}
+/* browser */
+.browser{border:1px solid #9aa7bd;border-radius:10px;overflow:hidden;max-width:640px;background:#fff;box-shadow:2px 3px 8px #0002;margin-bottom:8px}
+.bbar{display:flex;gap:6px;align-items:center;background:#e8edf6;padding:6px 8px;border-bottom:1px solid #c6cfdd}
+.bbar input{flex:1;min-width:0;font-family:Consolas,monospace;font-size:14px;padding:5px 10px;border:1px solid #9aa7bd;border-radius:99px}
+.bsec{font-size:12px;white-space:nowrap;color:var(--sub)}
+.bsec.ok{color:var(--ok)}.bsec.warn{color:var(--warn)}.bsec.ng{color:var(--ng)}
+.bpage{padding:16px 20px;min-height:210px;font-size:14px}
+.bpage h1{font-size:20px;margin:0 0 8px;color:var(--navy)}
+.bpage ul{margin:6px 0 6px 20px;padding:0}
+.errpage{color:#444}.errpage .ico{font-size:38px}
+.errpage h1{font-size:19px}
+.errpage code{display:inline-block;margin-top:8px}
+/* quiz / calc */
+.tbox.quiz{background:#f4f8ff;border:1px solid #b9cdf0}
+.qi{margin:10px 0;padding:8px 10px;background:#fff;border:1px solid #d5e0f3;border-radius:8px}
+.ql{margin-bottom:6px}
+.qin{font-family:Consolas,monospace;font-size:15px;padding:5px 8px;width:150px;border:1px solid #9aa7bd;border-radius:6px}
+.qo{display:block;margin:3px 0;cursor:pointer}
+.qm{margin-left:10px;font-weight:700}.qm.ok{color:var(--ok)}.qm.ng{color:var(--ng)}
+.qhint{margin-top:6px;padding:6px 8px;background:#fff7e0;border:1px solid #f0d58a;border-radius:6px;font-size:13px}
+.qexp{margin-top:6px;padding:6px 8px;background:#eaf8ee;border:1px solid #a8dcb5;border-radius:6px;font-size:13px}
+.calc .fld{margin-bottom:8px}
+.calc input{font-family:Consolas,monospace;font-size:15px;padding:5px 8px;border:1px solid #9aa7bd;border-radius:6px;margin:0 10px 0 4px;width:150px}
+.bitrow{margin:8px 0}.bl{display:block;font-size:12px;color:var(--sub);margin-bottom:2px}
+.bits{font-family:Consolas,monospace;font-size:16px;letter-spacing:1px}
+.bit{display:inline-block;width:14px;text-align:center;border-radius:3px;margin:0 1px;color:#fff}
+.bit.net{background:#2b6fd6}.bit.host{background:#e8871a}
+.dotc{margin:0 2px;color:#555}
+table.calct{border-collapse:collapse;margin-top:8px;font-size:14px}
+table.calct th{background:#eef2fa;text-align:left;padding:5px 10px;border:1px solid #c6cfdd;white-space:nowrap}
+table.calct td{padding:5px 10px;border:1px solid #c6cfdd}
+table.calct td.m{font-family:Consolas,monospace}
+/* notes */
+#notes{position:fixed;inset:0;background:#0007;z-index:50;display:none;align-items:center;justify-content:center;padding:12px}
+#notes.show{display:flex}
+#notes .np{background:var(--card,#fff);color:inherit;width:min(860px,100%);max-height:94vh;overflow:auto;border-radius:12px;padding:14px 18px;box-shadow:0 8px 30px #0006}
+#notes .nh{display:flex;justify-content:space-between;align-items:center;position:sticky;top:-14px;background:inherit;padding:6px 0;z-index:1}
+#notes details{border:1px solid var(--line,#d5dbe6);border-radius:8px;margin:6px 0;padding:4px 10px}
+#notes details details{margin:4px 0;background:#00000006}
+#notes summary{cursor:pointer;font-weight:700;padding:3px 0}
+#notes .st-ok{color:var(--ok,#16a34a)}#notes .st-ing{color:#b45309}#notes .st-no{color:#94a3b8}
+#notes .nb{padding:4px 0 8px;font-size:14px}
+#notes .nb .ans{background:#eaf8ee;border-radius:6px;padding:6px 10px;margin-top:6px}
+.lvb{display:inline-block;color:#fff;border-radius:99px;font-size:12px;padding:1px 10px;margin-right:6px;vertical-align:middle}
+
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px}
+.chip{background:#eef2f7;border-radius:99px;padding:2px 12px;font-size:12.5px;font-weight:700;color:var(--navy)}
+.chip.me{background:var(--accent);color:#fff}
+.sdots{display:flex;gap:6px;margin:8px 0 4px}
+.sd{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--sub);background:#fff}
+.sd.done{background:var(--ok);border-color:var(--ok);color:#fff}
+.sd.cur{border-color:var(--accent);color:var(--accent)}
+.sd.f{border-style:dashed}
+.sd.f.cur{border-color:#dc2626;color:#dc2626}
+.scorebar{font-size:13px;color:var(--sub)}
+.timerbar{background:#f3f5fa;border-radius:8px;padding:5px 10px;font-size:14px;margin:6px 0}
+.lockedx{opacity:.4;pointer-events:none}
+.lockbox{background:#f8fafc;border:1px dashed #94a3b8;border-radius:10px;padding:26px 18px;text-align:center;line-height:1.9}
+#diagram g.node.theirs .nbox{fill:#f1f5f9;stroke-dasharray:6 4}
+.ovl{position:fixed;inset:0;background:#0b1626ee;z-index:60;display:flex;align-items:center;justify-content:center;padding:14px}
+.ovl .box{background:#fff;border-radius:14px;padding:22px 26px;width:min(420px,100%)}
+.ovl h2{margin:0 0 8px;color:var(--navy);font-size:19px}
+.ovl label{display:block;margin:10px 0;font-size:14px;font-weight:700}
+.ovl input,.ovl select{display:block;width:100%;margin-top:4px;padding:8px 10px;font-size:16px;border:1px solid #9aa7bd;border-radius:8px;font-family:inherit}
+#lg-msg{color:var(--ng);font-size:14px;min-height:20px;margin-top:6px}
+#teacher{display:none;max-width:1100px;margin:0 auto;padding:16px}
+#teacher h1{font-size:20px;color:var(--navy)}
+#teacher table{border-collapse:collapse;width:100%;background:#fff}
+#teacher th,#teacher td{border:1px solid var(--line);padding:6px 10px;text-align:left;font-size:14px}
+#teacher th{background:#eef2f7}
+.pb{height:8px;background:#e5e7eb;border-radius:99px;overflow:hidden;width:120px;display:inline-block;vertical-align:middle;margin-right:6px}
+.pb i{display:block;height:100%;background:var(--accent2)}
+</style>
+</head>
+<body>
+<header>
+  <h1>🖧 情シス入門 ネットワーク実習【ペア対戦】 <small style="font-size:12px;font-weight:400;opacity:.85">〜白紙から、2人で作る・守る〜</small></h1>
+  <span class="badge" id="hd-team">未入室</span>
+  <span class="sp"></span>
+  <button onclick="leaveTeam()">退室</button>
+</header>
+<main>
+  <section id="mission" class="card"></section>
+  <section id="diagramwrap" class="card"><svg id="diagram" viewBox="0 0 760 330"></svg>
+    <div class="tip">機器をクリックするとその機器の画面に切り替わります。pingが通ると機器が緑に光ります。</div></section>
+  <section id="panel" class="card">
+    <div id="tabs"></div>
+    <div id="viewsw"></div>
+    <div id="pbody"></div>
+  </section>
+</main>
+<div id="notes" onclick="if(event.target===this)closeNotes()"></div>
+<div id="toast"></div>
+
+<div id="login" class="ovl" style="display:none"><div class="box"><h2>🖧 ネットワーク実習（ペア対戦）</h2>
+<p style="font-size:14px;margin:0">名前とチーム番号を入力します。<b>同じチーム番号の2人</b>がペアになります。</p>
+<label>名前<input id="lg-name" maxlength="12" autocomplete="off"></label>
+<label>チーム番号<select id="lg-team"></select></label>
+<button class="btn" style="width:100%;padding:10px" onclick="doJoin()">入室する</button>
+<div id="lg-msg"></div><div class="note" id="lg-mode"></div></div></div>
+<div id="teacher"><h1>👩‍🏫 先生用：チーム進行状況</h1><p class="note" id="t-mode"></p>
+<table><thead><tr><th>チーム</th><th>A（サーバ・PC①）</th><th>B（ルータ・PC②）</th><th>いまのステージ</th><th>進み具合</th><th>このステージの経過</th><th>ヒント計</th><th>合計点</th><th></th></tr></thead><tbody id="t-body"></tbody></table>
+<p><button class="btn ghost" onclick="resetAllTeams()">全チームをリセット</button></p></div>
+<script>
+// ===ENGINE START
+const DEVS={
+  router:{label:'ルータ',kind:'router',ttl:255},
+  server:{label:'サーバ',kind:'server',ttl:128,seg:'LAN1'},
+  pc1:{label:'PC①',kind:'pc',ttl:128,seg:'LAN1'},
+  pc2:{label:'PC②',kind:'pc',ttl:128,seg:'LAN2'}
+};
+const MAC={router:'AA-BB-CC-00-00-01',server:'AA-BB-CC-00-00-10',pc1:'AA-BB-CC-00-00-11',pc2:'AA-BB-CC-00-00-21'};
+
+function freshState(){
+  return {mission:0,cleared:{},setupDone:{},hints:{},hintsUsed:0,pings:[],webs:[],calcs:[],tutM:{},
+    hist:{router:[],server:[],pc1:[],pc2:[]},
+    dev:{
+      router:{if1:{ip:'',mask:'255.255.255.0'},if2:{ip:'',mask:'255.255.255.0'},fwd:false},
+      server:{ip:'',mask:'255.255.255.0',gw:'',
+        dhcp:{on:false,start:'',end:'',mask:'255.255.255.0',gw:'',dns:''},dnsSvc:{on:false,records:[]},web:{http:false,httpPort:'80',https:false,httpsPort:'443'}},
+      pc1:{mode:'manual',ip:'',mask:'255.255.255.0',gw:'',dns:'',lease:null,apipa:'169.254.37.112'},
+      pc2:{mode:'manual',ip:'',mask:'255.255.255.0',gw:'',dns:'',lease:null,apipa:'169.254.201.8'}
+    }};
+}
+
+const ip2n=s=>{const m=/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec((s||'').trim());
+  if(!m)return null;const p=m.slice(1).map(Number);if(p.some(x=>x>255))return null;
+  return p[0]*16777216+p[1]*65536+p[2]*256+p[3];};
+const n2ip=n=>[(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255].join('.');
+const maskOk=m=>{const n=ip2n(m);if(n===null||n===0)return false;const inv=(~n)>>>0;return ((inv&(inv+1))>>>0)===0;};
+const sameNet=(a,b,mask)=>{const x=ip2n(a),y=ip2n(b),m=ip2n(mask);if(x===null||y===null||m===null)return false;
+  return ((x&m)>>>0)===((y&m)>>>0);};
+const validIf=i=>ip2n(i.ip)!==null&&maskOk(i.mask);
+
+// 有効なネットワーク設定（DHCP取得中ならリース内容、失敗なら自動構成IP）
+function eff(S,id){
+  const d=S.dev[id];
+  if(id==='router')return {ifs:[{n:'if1',seg:'LAN1',ip:d.if1.ip,mask:d.if1.mask},{n:'if2',seg:'LAN2',ip:d.if2.ip,mask:d.if2.mask}],gw:'',dns:''};
+  const seg=DEVS[id].seg;
+  if(d.mode==='dhcp'){
+    if(d.lease)return {ifs:[{n:'eth',seg,ip:d.lease.ip,mask:d.lease.mask}],gw:d.lease.gw,dns:d.lease.dns,dhcp:true};
+    return {ifs:[{n:'eth',seg,ip:d.apipa,mask:'255.255.0.0'}],gw:'',dns:'',dhcp:true,apipa:true};
+  }
+  return {ifs:[{n:'eth',seg,ip:d.ip,mask:d.mask}],gw:d.gw,dns:d.dns||''};
+}
+function ownersOn(S,seg,ip){
+  const r=[];
+  for(const id of Object.keys(DEVS)){
+    if(eff(S,id).ifs.some(i=>i.seg===seg&&validIf(i)&&i.ip===ip))r.push(id);
+  }
+  return r;
+}
+function conflicts(S){
+  const res=[];
+  for(const seg of ['LAN1','LAN2']){
+    const map={};
+    for(const id of Object.keys(DEVS)){
+      for(const i of eff(S,id).ifs){
+        if(i.seg===seg&&validIf(i)){(map[i.ip]=map[i.ip]||[]).push(id);}
+      }
+    }
+    for(const ip in map){if(map[ip].length>1)res.push({seg,ip,devs:map[ip]});}
+  }
+  return res;
+}
+
+// 1方向の配送判定
+function deliver(S,src,dst){
+  const e=eff(S,src),ifs=e.ifs.filter(validIf);
+  if(ip2n(dst)===null||!ifs.length)return {ok:false,kind:'general',from:''};
+  const own=ifs.find(i=>i.ip===dst);
+  if(own)return {ok:true,dev:src,hops:[],local:true};
+  const on=ifs.find(i=>sameNet(i.ip,dst,i.mask));
+  if(on){
+    const ow=ownersOn(S,on.seg,dst).filter(x=>x!==src);
+    if(!ow.length)return {ok:false,kind:'hostunreach',from:on.ip};
+    return {ok:true,dev:ow[0],hops:[],srcIp:on.ip,conflict:ow.length>1};
+  }
+  if(src==='router')return {ok:false,kind:'netunreach',from:ifs[0].ip};
+  const gw=e.gw;
+  const gif=(ip2n(gw)!==null)?ifs.find(i=>sameNet(i.ip,gw,i.mask)):null;
+  if(!gif)return {ok:false,kind:'general',from:ifs[0].ip};
+  const go=ownersOn(S,gif.seg,gw).filter(x=>x!==src);
+  if(!go.length)return {ok:false,kind:'hostunreach',from:gif.ip};
+  if(DEVS[go[0]].kind!=='router')return {ok:false,kind:'timeout'};
+  const rifs=eff(S,'router').ifs.filter(validIf);
+  const self=rifs.find(i=>i.ip===dst);
+  if(self)return {ok:true,dev:'router',hops:[],srcIp:gif.ip,viaIp:gw};
+  if(!S.dev.router.fwd)return {ok:false,kind:'timeout'};
+  const out=rifs.find(i=>sameNet(i.ip,dst,i.mask));
+  if(!out)return {ok:false,kind:'netunreach',from:gw};
+  const ow=ownersOn(S,out.seg,dst).filter(x=>x!=='router');
+  if(!ow.length)return {ok:false,kind:'hostunreach',from:gw};
+  return {ok:true,dev:ow[0],hops:['router'],viaIp:gw,srcIp:gif.ip,conflict:ow.length>1};
+}
+// 行き＋帰り
+function ping1(S,src,dst){
+  const f=deliver(S,src,dst);
+  if(!f.ok)return f;
+  if(f.local)return {ok:true,dev:src,ttl:DEVS[src].ttl,hops:[],path:[src]};
+  const b=deliver(S,f.dev,f.srcIp);
+  if(!b.ok)return {ok:false,kind:'timeout'};
+  return {ok:true,dev:f.dev,ttl:DEVS[f.dev].ttl-b.hops.length,hops:f.hops,viaIp:f.viaIp,
+    conflict:!!(f.conflict||b.conflict),path:[src,...f.hops,f.dev]};
+}
+// DNS名前解決
+function resolve(S,id,name){
+  const dns=eff(S,id).dns;
+  if(!dns||ip2n(dns)===null)return {ok:false,kind:'nodns'};
+  const r=ping1(S,id,dns);
+  if(!r.ok)return {ok:false,kind:'dnstimeout'};
+  if(r.dev!=='server'||!S.dev.server.dnsSvc.on)return {ok:false,kind:'dnstimeout'};
+  const rec=S.dev.server.dnsSvc.records.find(x=>x.name.trim().toLowerCase()===name.toLowerCase());
+  if(!rec)return {ok:false,kind:'nxdomain',server:dns};
+  return {ok:true,ip:rec.ip.trim(),server:dns};
+}
+// DHCP取得
+function renew(S,id){
+  const d=S.dev[id];d.lease=null;
+  if(d.mode!=='dhcp')return {ok:false,msg:'固定IP設定です'};
+  const seg=DEVS[id].seg,sv=S.dev.server,se=eff(S,'server').ifs[0];
+  if(seg!=='LAN1'||!sv.dhcp.on||!validIf(se))return {ok:false,msg:'DHCPサーバーに接続できません'};
+  const a=ip2n(sv.dhcp.start),b=ip2n(sv.dhcp.end),dm=(sv.dhcp.mask||'').trim();
+  if(a===null||b===null||a>b||!maskOk(dm))return {ok:false,msg:'DHCPサーバーに接続できません'};
+  const dmn=ip2n(dm);
+  const used=new Set();
+  for(const o of Object.keys(DEVS)){if(o===id)continue;
+    for(const i of eff(S,o).ifs){if(i.seg===seg&&validIf(i))used.add(i.ip);}}
+  for(let x=a;x<=b&&x-a<1024;x++){
+    const ip=n2ip(x);
+    const scopeNet=((x&dmn)>>>0),scopeBc=((scopeNet|((~dmn)>>>0))>>>0);
+    if(!used.has(ip)&&x!==scopeNet&&x!==scopeBc&&sameNet(ip,se.ip,se.mask)){
+      d.lease={ip,mask:dm,gw:(sv.dhcp.gw||'').trim(),dns:(sv.dhcp.dns||'').trim()};
+      return {ok:true,msg:'取得しました'};
+    }
+  }
+  return {ok:false,msg:'DHCPサーバーに接続できません'};
+}
+
+// ---- コマンド（日本語版Windows風） ----
+function parseTarget(S,id,argv){
+  let n=4,target=null;
+  for(let i=0;i<argv.length;i++){const a=argv[i];
+    if(a==='-n'&&argv[i+1]){n=Math.max(1,Math.min(10,parseInt(argv[++i])||4));}
+    else if(!a.startsWith('-'))target=a;}
+  return {n,target};
+}
+function planPing(S,id,argv){
+  const {n,target}=parseTarget(S,id,argv);
+  if(!target)return {head:['使用法: ping [-n 回数] ターゲット名'],replies:[],tail:[]};
+  let dst=target,label=target,loop=false,nm=null;
+  if(/^127\.\d+\.\d+\.\d+$/.test(target)||target.toLowerCase()==='localhost'){loop=true;dst='127.0.0.1';
+    label=target.toLowerCase()==='localhost'?'localhost [127.0.0.1]':target;}
+  else if(ip2n(target)===null){
+    const r=resolve(S,id,target);
+    if(!r.ok)return {head:['ping 要求ではホスト '+target+' が見つかりませんでした。名前を確認して再実行してください。'],replies:[],tail:[],meta:{dst:target,name:target,okc:0,n:0,conflict:false,nores:true}};
+    dst=r.ip;nm=target;label=target+' ['+dst+']';
+  }
+  const head=['',label+' に ping を送信しています 32 バイトのデータ:'];
+  const replies=[];let recv=0,okc=0,anyConf=false;
+  for(let i=0;i<n;i++){
+    let res=loop?{ok:true,ttl:DEVS[id].ttl,path:[id]}:ping1(S,id,dst);
+    if(res.conflict)anyConf=true;
+    if(res.ok&&res.conflict&&i%2===1)res={ok:false,kind:'timeout'};
+    let text;
+    if(res.ok){text=dst+' からの応答: バイト数 =32 時間 <1ms TTL='+res.ttl;recv++;okc++;replies.push({text,ok:true,path:res.path});continue;}
+    if(res.kind==='timeout')text='要求がタイムアウトしました。';
+    else if(res.kind==='hostunreach'){text=res.from+' からの応答: 宛先ホストに到達できません。';recv++;}
+    else if(res.kind==='netunreach'){text=res.from+' からの応答: 宛先ネットワークに到達できません。';recv++;}
+    else text='PING: 転送に失敗しました。General failure。';
+    replies.push({text,ok:false,path:[id]});
+  }
+  const tail=['',dst+' の ping 統計:',
+    '    パケット数: 送信 = '+n+'、受信 = '+recv+'、損失 = '+(n-recv)+' ('+Math.round((n-recv)/n*100)+'% の損失)、'];
+  if(okc>0){tail.push('ラウンド トリップの概算時間 (ミリ秒):','    最小 = 0ms、最大 = 0ms、平均 = 0ms');}
+  return {head,replies,tail,meta:{dst,name:nm,okc,n,conflict:anyConf}};
+}
+function planTracert(S,id,argv){
+  const target=argv.filter(a=>!a.startsWith('-'))[0];
+  if(!target)return ['使用法: tracert ターゲット名'];
+  let dst=target,label=target;
+  if(ip2n(target)===null){
+    const r=resolve(S,id,target);
+    if(!r.ok)return ['ターゲット名 '+target+' を解決できません。'];
+    dst=r.ip;label=target+' ['+dst+']';
+  }
+  const L=['',label+' へのルートをトレースしています','最大 30 ホップ:',''];
+  const res=ping1(S,id,dst);
+  const row=(n,ip)=>('  '+n).slice(-3)+'    <1 ms    <1 ms    <1 ms  '+ip;
+  if(res.ok){
+    let k=1;
+    if(res.hops.length)L.push(row(k++,res.viaIp));
+    if(res.dev!==id&&!(res.hops.length===0&&res.dev==='router'&&res.viaIp===dst))L.push(row(k,dst));
+    else if(res.dev==='router'&&res.viaIp===dst){/* ルータ自身: 1ホップ目で到達済み */}
+    L.push('','トレースを完了しました。');
+  }else{
+    for(let k=1;k<=3;k++)L.push(('  '+k).slice(-3)+'     *        *        *     要求がタイムアウトしました。');
+    L.push('（以降のホップも応答がないため省略します）');
+  }
+  return L;
+}
+function planNslookup(S,id,argv){
+  const name=argv[0];
+  if(!name)return ['対話モードは未対応です。 nslookup 名前 の形式で使ってください。'];
+  if(ip2n(name)!==null)return ['*** UnKnown が '+name+' を見つけられません: Non-existent domain'];
+  const r=resolve(S,id,name);
+  if(r.ok)return ['サーバー:  UnKnown','Address:  '+r.server,'','名前:    '+name,'Address:  '+r.ip,''];
+  if(r.kind==='nodns')return ['*** 既定のサーバーが利用できません'];
+  if(r.kind==='dnstimeout')return ['DNS request timed out.','    timeout was 2 seconds.','*** UnKnown への要求がタイムアウトしました'];
+  return ['サーバー:  UnKnown','Address:  '+r.server,'','*** UnKnown が '+name+' を見つけられません: Non-existent domain'];
+}
+function ipconfigLines(S,id,all){
+  const e=eff(S,id),i=e.ifs[0],d=S.dev[id],ok=validIf(i);
+  const L=['','Windows IP 構成','','','イーサネット アダプター イーサネット:',''];
+  if(all){L.push('   物理アドレス. . . . . . . . . . . . .: '+MAC[id]);
+    L.push('   DHCP 有効 . . . . . . . . . . . . . .: '+(d.mode==='dhcp'?'はい':'いいえ'));}
+  if(ok)L.push('   '+(e.apipa?'自動構成 IPv4 アドレス. . . . . . . .: ':'IPv4 アドレス . . . . . . . . . . . .: ')+i.ip+'(優先)');
+  if(ok)L.push('   サブネット マスク . . . . . . . . . .: '+i.mask);
+  L.push('   デフォルト ゲートウェイ . . . . . . .: '+(e.gw||''));
+  if(all){
+    if(d.mode==='dhcp'&&d.lease)L.push('   DHCP サーバー . . . . . . . . . . . .: '+eff(S,'server').ifs[0].ip);
+    L.push('   DNS サーバー. . . . . . . . . . . . .: '+(e.dns||''));
+  }
+  L.push('');
+  return L;
+}
+function runIpconfig(S,id,argv){
+  const a=(argv[0]||'').toLowerCase();
+  if(a==='/all')return ipconfigLines(S,id,true);
+  if(a==='/renew'||a==='/release'){
+    const d=S.dev[id];
+    if(d.mode!=='dhcp')return ['','インターフェイス イーサネット は DHCP が有効ではありません。',''];
+    if(a==='/release'){d.lease=null;return ['','Windows IP 構成','','イーサネット アダプター イーサネット は解放されました。',''];}
+    const r=renew(S,id);
+    if(!r.ok)return ['','Windows IP 構成','','インターフェイス イーサネット の更新中にエラーが発生しました: DHCP サーバーに接続できません。要求がタイムアウトしました。',''];
+    return ipconfigLines(S,id,false);
+  }
+  if(a&&a!=='')return ['','使用法: ipconfig [/all | /renew | /release]',''];
+  return ipconfigLines(S,id,false);
+}
+// ルータ（Cisco風）
+function planPingRouter(S,argv){
+  const t=argv[0];
+  if(!t)return ['% Incomplete command.'];
+  if(ip2n(t)===null)return ['% Unrecognized host or address, or protocol not running.'];
+  let s='',k=0,cf=false;
+  for(let i=0;i<5;i++){
+    const r=ping1(S,'router',t);
+    if(r.conflict)cf=true;
+    if(r.ok&&!(r.conflict&&i%2===1)){s+='!';k++;}
+    else if(r.kind==='hostunreach'||r.kind==='netunreach')s+='U';
+    else s+='.';
+  }
+  const L=['Type escape sequence to abort.','Sending 5, 100-byte ICMP Echos to '+t+', timeout is 2 seconds:',s,
+    'Success rate is '+Math.round(k/5*100)+' percent ('+k+'/5)'+(k>0?', round-trip min/avg/max = 1/1/1 ms':'')];
+  L.meta={dst:t,okc:k,n:5,conflict:cf};
+  return L;
+}
+function routerBrief(S){
+  const r=S.dev.router,pad=(s,n)=>(s+' '.repeat(n)).slice(0,n);
+  const row=(n,i)=>pad(n,23)+pad(ip2n(i.ip)!==null?i.ip:'unassigned',16)+'YES '+pad(ip2n(i.ip)!==null?'manual':'unset',7)+pad('up',22)+'up';
+  return [pad('Interface',23)+pad('IP-Address',16)+'OK? '+pad('Method',7)+pad('Status',22)+'Protocol',
+    row('GigabitEthernet0/0',r.if1),row('GigabitEthernet0/1',r.if2)];
+}
+
+// ---- Web（HTTP/HTTPS） ----
+const WEB_PAGES={
+  '/':{title:'とよしょう商事 社内ポータル',lines:['お知らせ','勤怠入力','社内掲示板']},
+  '/index.html':{title:'とよしょう商事 社内ポータル',lines:['お知らせ','勤怠入力','社内掲示板']},
+  '/news.html':{title:'お知らせ',lines:['10月：避難訓練のお知らせ','11月：システム点検（ネットワーク停止あり）']}
+};
+function parseUrl(u){
+  const m=/^(?:(https?):\/\/)?([^\/:\s]+)(?::(\d{1,5}))?(\/\S*)?$/i.exec((u||'').trim());
+  if(!m)return null;
+  const scheme=(m[1]||'http').toLowerCase();
+  const port=m[3]?parseInt(m[3],10):(scheme==='https'?443:80);
+  if(port<1||port>65535)return null;
+  return {scheme,host:m[2].toLowerCase(),port,portGiven:!!m[3],path:m[4]||'/'};
+}
+// ブラウザ／curl 共通：名前解決 → 到達（ping と同じ経路判定）→ ポート → 証明書 → ページ
+function httpGet(S,id,url,opt){
+  opt=opt||{};
+  const u=parseUrl(url);
+  if(!u)return {kind:'badurl',url:(url||'').trim(),scheme:'',host:'',port:0,path:''};
+  const res=Object.assign({kind:'',url:u.scheme+'://'+u.host+(u.portGiven?':'+u.port:'')+u.path},u);
+  const isIp=ip2n(u.host)!==null;
+  if(u.host==='localhost'||/^127\./.test(u.host)){res.kind='refused';res.route=[id];return res;}
+  let dst=u.host;
+  if(!isIp){
+    const r=resolve(S,id,u.host);
+    if(!r.ok){res.kind='noname';res.why=r.kind;return res;}
+    dst=r.ip;
+  }
+  const pr=ping1(S,id,dst);
+  if(!pr.ok){res.kind='timeout';res.why=pr.kind;return res;}
+  res.route=pr.path;res.dst=dst;
+  if(pr.dev!=='server'){res.kind='refused';return res;}
+  const w=S.dev.server.web,P=String(u.port);
+  const hOn=!!w.http&&P===String(parseInt(w.httpPort,10));
+  const sOn=!!w.https&&P===String(parseInt(w.httpsPort,10));
+  if(u.scheme==='http'){
+    if(sOn){res.kind='badreq';res.status=400;return res;}
+    if(!hOn){res.kind='refused';return res;}
+  }else{
+    if(hOn){res.kind='sslerr';return res;}
+    if(!sOn){res.kind='refused';return res;}
+    if(isIp&&!opt.insecure){res.kind='cert';return res;}
+  }
+  const pg=WEB_PAGES[u.path.split('?')[0]];
+  if(pg){res.kind='ok';res.status=200;res.page=pg;}
+  else{res.kind='notfound';res.status=404;}
+  return res;
+}
+function logWeb(S,id,r,via){
+  if(!r)return;
+  S.webs.push({src:id,via:via||'',url:r.url,scheme:r.scheme,host:r.host,port:r.port,kind:r.kind,insecure:!!r.insecure,incl:!!r.incl});
+  if(S.webs.length>1000)S.webs.shift();
+}
+const webd=(S,c,src,pr)=>S.webs.slice(c.w||0).some(p=>p.src===src&&pr(p));
+function planCurl(S,id,argv){
+  let incl=false,head=false,ins=false,url=null;
+  for(const a of argv){
+    if(a==='-i')incl=true;
+    else if(a==='-I')head=true;
+    else if(a==='-k'||a==='--insecure')ins=true;
+    else if(!a.startsWith('-'))url=a;
+  }
+  if(!url)return {lines:["curl: try 'curl --help' for more information"],res:null};
+  const r=httpGet(S,id,url,{insecure:ins});
+  r.incl=incl||head;
+  r.insecure=ins&&r.kind==='ok'&&r.scheme==='https'&&ip2n(r.host)!==null;
+  const L=[],h=r.host,p=r.port;
+  const resp=(code,text,body)=>{
+    if(incl||head)L.push('HTTP/1.1 '+code+' '+text,'Content-Type: text/html; charset=UTF-8','Content-Length: '+body.join('').length,'');
+    if(!head)body.forEach(x=>L.push(x));
+  };
+  switch(r.kind){
+    case 'ok':{const pg=r.page;
+      resp(200,'OK',['<html><head><title>'+pg.title+'</title></head>','<body><h1>'+pg.title+'</h1>','<ul>'+pg.lines.map(x=>'<li>'+x+'</li>').join('')+'</ul></body></html>']);break;}
+    case 'notfound':resp(404,'Not Found',['<html><body><h1>404 Not Found</h1></body></html>']);break;
+    case 'badreq':resp(400,'Bad Request',['<html><body><h1>400 Bad Request</h1><p>The plain HTTP request was sent to HTTPS port</p></body></html>']);break;
+    case 'noname':L.push('curl: (6) Could not resolve host: '+h);break;
+    case 'timeout':L.push('curl: (28) Failed to connect to '+h+' port '+p+' after 21043 ms: Timed out');break;
+    case 'refused':L.push('curl: (7) Failed to connect to '+h+' port '+p+' after 2 ms: Could not connect to server');break;
+    case 'sslerr':L.push('curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed');break;
+    case 'cert':L.push('curl: (60) schannel: SNI or certificate check failed: SEC_E_WRONG_PRINCIPAL','（証明書の名前が一致しません。-k を付けると警告を無視して接続できます）');break;
+    default:L.push('curl: (3) URL rejected: Malformed input to a URL function');
+  }
+  return {lines:L,res:r};
+}
+
+// ---- サブネット計算・計算問題 ----
+const _fw=s=>String(s==null?'':s).trim().replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/．/g,'.').replace(/／/g,'/');
+// "/26" "26" "255.255.255.192" のどれでもプレフィックス長(0〜32)にする。不正なら null
+function parsePrefix(s){
+  s=_fw(s);
+  const m=/^\/?\s*(\d{1,2})$/.exec(s);
+  if(m){const p=parseInt(m[1],10);return p>=0&&p<=32?p:null;}
+  if(ip2n(s)!==null&&maskOk(s)){let n=ip2n(s),c=0;while(n&0x80000000){c++;n=(n<<1)>>>0;}return c;}
+  return null;
+}
+const pmask=p=>p<=0?0:((0xFFFFFFFF<<(32-p))>>>0);
+function subnetInfo(ipStr,p){
+  const ip=ip2n(ipStr),m=pmask(p),net=(ip&m)>>>0,bc=(net|((~m)>>>0))>>>0,h=32-p,tot=Math.pow(2,h);
+  const usable=p>=31?(p===31?2:1):tot-2;
+  return {ip,mask:m,net,bc,h,tot,usable,first:p>=31?net:net+1,last:p>=31?bc:bc-1};
+}
+// 32ビットを1ビットずつ色分け（ネットワーク部＝青、ホスト部＝橙）
+function bitsHtml(ipStr,p){
+  const n=ip2n(ipStr);let h='';
+  for(let i=0;i<32;i++){
+    h+='<span class="bit '+(i<p?'net':'host')+'">'+((n>>>(31-i))&1)+'</span>';
+    if(i%8===7&&i<31)h+='<span class="dotc">.</span>';
+  }
+  return h;
+}
+// ---- 計算問題（答え入力と自動採点） ----
+function qNorm(it,raw){
+  const v=_fw(raw);
+  if(it.type==='num'){const x=v.replace(/[台,\s]/g,'');return /^\d+$/.test(x)?parseInt(x,10):null;}
+  if(it.type==='prefix')return parsePrefix(v);
+  if(it.type==='choice')return /^\d+$/.test(v)?parseInt(v,10):null;
+  return v;
+}
+function qCheck(S,k,idx){
+  const st=MISSIONS[k].tutorial[idx],t=tstate(S,k);
+  const A=t.quiz[idx]||{},ok={};let all=true;
+  st.quiz.items.forEach(it=>{const x=qNorm(it,A[it.id]);const good=x!==null&&x===it.answer;ok[it.id]=good;if(!good)all=false;});
+  t.qok[idx]=ok;t.qtry[idx]=(t.qtry[idx]||0)+1;
+  return all;
+}
+function quizAllOk(S,k,idx){
+  const st=MISSIONS[k].tutorial[idx];if(!st||!st.quiz)return true;
+  const O=tstate(S,k).qok[idx]||{};
+  return st.quiz.items.every(it=>O[it.id]===true);
+}
+
+// ---- ミッション（すべてチュートリアル形式） ----
+const same=(a,b)=>(a||'').trim()===b;
+const cfg=(S,id,ip,mask,gw)=>{const d=S.dev[id];return d.mode!=='dhcp'&&same(d.ip,ip)&&same(d.mask,mask)&&(gw===undefined||same(d.gw,gw));};
+const M24='255.255.255.0';
+// そのステップを開いてから行った操作だけを数える
+const pinged=(S,c,src,dst,pr)=>S.pings.slice(c.from||0).some(p=>p.src===src&&p.dst===dst&&pr(p));
+const pingedName=(S,c,src,name,pr)=>S.pings.slice(c.from||0).some(p=>p.src===src&&p.name===name&&pr(p));
+const ranc=(S,c,id,re)=>S.hist[id].slice((c.h&&c.h[id])||0).some(x=>re.test(x));
+const dhcpCfg=S=>{const d=S.dev.server.dhcp;return d.on&&same(d.start,'192.168.1.100')&&same(d.end,'192.168.1.150')&&same(d.gw,'192.168.1.1')&&same(d.dns,'192.168.1.10')&&same(d.mask,M24);};
+const inPool=S=>{const l=S.dev.pc1.lease;if(S.dev.pc1.mode!=='dhcp'||!l)return false;const x=ip2n(l.ip);return x>=ip2n('192.168.1.100')&&x<=ip2n('192.168.1.150');};
+const recOf=(S,name)=>S.dev.server.dnsSvc.records.find(r=>r.name.trim().toLowerCase()===name);
+
+function logPing(S,id,meta){
+  if(!meta)return;
+  S.pings.push({src:id,dst:meta.dst,name:meta.name||null,ok:meta.okc>0,okc:meta.okc,n:meta.n,conflict:!!meta.conflict,nores:!!meta.nores,fwd:!!S.dev.router.fwd,gw:eff(S,id).gw||'',sip:(eff(S,id).ifs[0]||{}).ip||'',smask:(eff(S,id).ifs[0]||{}).mask||''});
+  if(S.pings.length>1000)S.pings.shift();
+}
+function tstate(S,k){
+  const t=S.tutM[k]||(S.tutM[k]={});
+  if(t.step==null)t.step=0;
+  t.pred=t.pred||{};t.hint=t.hint||{};t.entered=t.entered||{};t.pf=t.pf||{};t.hf=t.hf||{};t.wf=t.wf||{};t.cf=t.cf||{};t.quiz=t.quiz||{};t.qok=t.qok||{};t.qtry=t.qtry||{};
+  return t;
+}
+function ctxFor(S,k,idx){const t=tstate(S,k);return {from:t.pf[idx]||0,h:t.hf[idx]||{},w:t.wf[idx]||0,cl:t.cf[idx]||0};}
+function stepDone(S,k,idx){
+  const st=MISSIONS[k].tutorial[idx];if(!st)return false;
+  const t=tstate(S,k);
+  if(st.predict&&t.pred[idx]==null)return false;
+  if(st.quiz&&!quizAllOk(S,k,idx))return false;
+  const c=ctxFor(S,k,idx);
+  return st.subs.every(x=>x.f(S,c));
+}
+function enterStep(S,k,idx){
+  const t=tstate(S,k),st=MISSIONS[k].tutorial[idx];
+  if(!st||t.entered[idx])return;
+  t.entered[idx]=1;t.pf[idx]=S.pings.length;t.wf[idx]=S.webs.length;t.cf[idx]=S.calcs.length;
+  t.hf[idx]={router:S.hist.router.length,server:S.hist.server.length,pc1:S.hist.pc1.length,pc2:S.hist.pc2.length};
+  if(st.enter)st.enter(S);
+}
+// 前のミッションが終わった時点の標準状態（ジャンプ・見直し用）
+function applyBase(S,k){
+  S.dev=freshState().dev;const d=S.dev;
+  d.router.if1.ip='192.168.1.1';d.router.if2.ip='192.168.2.1';d.router.fwd=true;
+  Object.assign(d.server,{ip:'192.168.1.10',gw:'192.168.1.1'});
+  Object.assign(d.server.dhcp,{on:true,start:'192.168.1.100',end:'192.168.1.150',mask:'255.255.255.0',gw:'192.168.1.1',dns:'192.168.1.10'});
+  d.server.dnsSvc={on:true,records:[{name:'www.toyosho.example',ip:'192.168.1.10'}]};
+  d.server.web={http:true,httpPort:'80',https:true,httpsPort:'443'};
+  Object.assign(d.pc1,{mode:'manual',ip:'192.168.1.11',mask:'255.255.255.0',gw:'192.168.1.1',dns:'192.168.1.10',lease:null});
+  Object.assign(d.pc2,{mode:'manual',ip:'192.168.2.21',mask:'255.255.255.0',gw:'192.168.2.1',dns:'192.168.1.10',lease:null});
+}
+function beginMission(S,i){
+  S.mission=i;
+  const t=tstate(S,i);
+  if(t.started)return false;
+  t.started=true;
+  applyBase(S,i);
+  S.pings=[];S.webs=[];S.calcs=[];Object.keys(S.hist).forEach(k=>S.hist[k]=[]);
+  const m=MISSIONS[i];if(m.setup)m.setup(S);
+  enterStep(S,i,0);
+  return true;
+}
+function tutAdvance(S,k,force){
+  const T=MISSIONS[k].tutorial,t=tstate(S,k);
+  if(t.step>=T.length||(!force&&!stepDone(S,k,t.step)))return null;
+  t.step++;
+  if(t.step>=T.length){S.cleared[k]=true;return 'cleared';}
+  enterStep(S,k,t.step);
+  return 'next';
+}
+
+const M24x=1;
+const MISSIONS=[{title:'-',level:'',color:'#0f766e',tutorial:[{title:'-',todo:'',subs:[]}],real:[]}];
+
+// ===ENGINE END
+
+// ===================== 画面 =====================
+const KEY='netpractice_lab_v1';
+let S=load();
+const ui={dev:'pc1',view:'cfg',msg:null};
+const TERM={router:[],server:[],pc1:[],pc2:[]};
+const BUSY={};
+const HIST_IDX={};
+const PROMPT={router:'Router#',server:'C:\\Users\\Administrator>',pc1:'C:\\Users\\user>',pc2:'C:\\Users\\user>'};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+function load(){
+  try{const j=localStorage.getItem(KEY);if(j){const o=JSON.parse(j);const f=freshState();
+    return Object.assign(f,o,{dev:Object.assign(f.dev,o.dev),hist:Object.assign(f.hist,o.hist)});}}catch(e){}
+  return freshState();
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function toast(t){const el=$('toast');el.textContent=t;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2600);}
+
+function afterChange(){save();renderDiagram();renderMission();renderTabs();renderHeader();}
+const TESTAVAIL=/[?&]test=1(&|$)/.test(location.search);
+function testOn(){if(!TESTAVAIL)return false;try{return localStorage.getItem('netdojo_testmode')==='1';}catch(e){return false;}}
+function openNotes(){
+  const el=$('notes');
+  let h='<div class="np"><div class="nh"><h3 style="margin:0">📖 ふりかえりノート（これまで学んだことの見返し）</h3><button class="btn" onclick="closeNotes()">閉じる ✕</button></div><p class="note">進行はそのままで、学習済みのステップの解説・答えを読み返せます。機器の設定は変わりません。</p>';
+  MISSIONS.forEach((m,k)=>{
+    const t=tstate(S,k),n=m.tutorial.length,cl=!!S.cleared[k];
+    const reached=cl?n:Math.min(t.step+(t.started?1:0),n);
+    const stat=cl?'<span class="st-ok">✓ 達成</span>':(t.started?'<span class="st-ing">進行中</span>':'<span class="st-no">未着手</span>');
+    h+='<details'+(S.mission===k?' open':'')+'><summary>問'+(k+1)+'：'+esc(m.title)+'　'+stat+'</summary>';
+    if(!t.started&&!cl)h+='<div class="nb st-no">まだ始めていません。</div>';
+    for(let i=0;i<reached;i++){
+      const st=m.tutorial[i],fin=cl||i<t.step;
+      h+='<details><summary>'+(i+1)+'. '+esc(st.title)+(fin?'':'　<span class="st-ing">（取り組み中）</span>')+'</summary><div class="nb">';
+      if(st.why)h+='<div>'+st.why+'</div>';
+      if(fin){
+        if(st.predict)h+='<div class="ans"><b>🔮 予想問題</b><br>'+st.predict.q+'<br>正解：<b>'+esc(st.predict.opts[st.predict.correct])+'</b><br>'+st.predict.why+'</div>';
+        if(st.quiz)h+='<div class="ans"><b>✏️ 問い</b>'+st.quiz.items.map(it=>'<div style="margin-top:4px">'+it.q+'<br>→ '+(it.exp||'')+'</div>').join('')+'</div>';
+        if(st.after)h+='<div class="ans"><b>✅ 答え合わせ</b>'+st.after+'</div>';
+      }
+      h+='</div></details>';
+    }
+    h+='</details>';
+  });
+  el.innerHTML=h+'</div>';el.classList.add('show');
+}
+function closeNotes(){$('notes').classList.remove('show');}
+function toggleTest(){try{localStorage.setItem('netdojo_testmode',testOn()?'0':'1');}catch(e){}renderHeader();renderMission();}
+function renderHeader(){return;$('hintcnt').textContent='ヒント使用：'+S.hintsUsed+'回';const b=$('testbtn');if(b){b.style.display=TESTAVAIL?'':'none';b.textContent=testOn()?'🧪 テストモード：ON':'🧪 テストモード';b.style.background=testOn()?'#fde68a':'';}}
+function renderMission(){
+  const i=S.mission,m=MISSIONS[i];
+  let h='<div class="dots"><span class="lab">問題</span>';
+  MISSIONS.forEach((_,k)=>{h+='<button class="dot '+(S.cleared[k]?'done ':'')+(k===i?'cur':'')+'" onclick="gotoMission('+k+')" title="'+esc(MISSIONS[k].title)+'">'+(S.cleared[k]?'✓':(k+1))+'</button>';});
+  h+='</div><h2><span class="lvb" style="background:'+m.color+'">問'+(i+1)+'　'+m.level+'</span> '+esc(m.title)+'</h2>'+renderTutorial(m,i);
+  $('mission').innerHTML=h;
+}
+function gotoMission(k){
+  S.snap=S.snap||{};
+  if(S.mission!==k)S.snap[S.mission]=JSON.parse(JSON.stringify({dev:S.dev,pings:S.pings,webs:S.webs,calcs:S.calcs,hist:S.hist}));
+  const fresh=beginMission(S,k);S.mission=k;
+  if(!fresh&&S.snap[k]){const z=JSON.parse(JSON.stringify(S.snap[k]));S.dev=z.dev;S.pings=z.pings;S.webs=z.webs;S.calcs=z.calcs;S.hist=z.hist;}
+  Object.keys(TERM).forEach(x=>TERM[x]=[]);clearBrowsers();
+  if(fresh){Object.keys(TERM).forEach(x=>TERM[x]=[]);clearBrowsers();}
+  save();ui.msg=null;applyFocus();renderAll();
+}
+function applyFocus(){
+  const m=MISSIONS[S.mission],t=tstate(S,S.mission);
+  if(t.step<m.tutorial.length){const f=m.tutorial[t.step].focus;if(f){ui.dev=f.dev;ui.view=f.view;}}
+}
+function renderTutorial(m,i){
+  const T=m.tutorial,t=tstate(S,i),n=T.length,last=i===MISSIONS.length-1;
+  if(t.step>=n){
+    return '<div class="clear"><h4>'+(last?'🎓 全問クリア！おつかれさま':'🎉 問'+(i+1)+' 達成！')+'</h4><div class="real"><b>📌 実機でやってみよう</b><ul style="margin:4px 0 0 18px;padding:0">'+m.real.map(x=>'<li>'+x+'</li>').join('')+'</ul></div>'+
+      (last?'':'<button class="btn" onclick="gotoMission('+(i+1)+')">次の問へ →</button> ')+'<button class="btn ghost" onclick="tutRestart('+i+')">もう一度見直す</button></div>';
+  }
+  const st=T[t.step],done=stepDone(S,i,t.step),pk=t.pred[t.step],c=ctxFor(S,i,t.step);
+  let h=n>1?'<div class="tprog">ステップ '+(t.step+1)+' / '+n+'</div><div class="bar"><i style="width:'+Math.round(t.step/n*100)+'%"></i></div>':'';
+  h+='<h3 class="stt">'+esc(st.title)+'</h3>';
+  if(st.why)h+='<div class="tbox why"><b>🧠 しくみ</b>'+st.why+'</div>';
+  if(st.predict){
+    h+='<div class="tbox pred"><b>'+(st.predict.label||'🔮 実行する前に予想しよう')+'</b><div>'+st.predict.q+'</div>';
+    st.predict.opts.forEach((o,k)=>{
+      let cls='opt';
+      if(done){if(k===st.predict.correct)cls+=' right';else if(k===pk)cls+=' wrong';}
+      else if(k===pk)cls+=' sel';
+      h+='<button class="'+cls+'" '+(done?'disabled':'onclick="tutPick('+i+','+t.step+','+k+')"')+'>'+(k===pk?'● ':'○ ')+esc(o)+'</button>';
+    });
+    h+='</div>';
+  }
+  if(st.quiz)h+=quizHtml(i,t.step,st);
+  if(st.challenge)h+='<div class="tbox chal"><b>🔥 自力チャレンジ</b>'+st.todo+'</div>';
+  else h+='<div class="tbox do"><b>🎯 やってみよう</b>'+st.todo+'</div>';
+  const subs=[];
+  if(st.predict)subs.push({t:'予想を選んだ',ok:pk!=null});
+  if(st.quiz)subs.push({t:'下の問いにすべて正解した',ok:quizAllOk(S,i,t.step)});
+  st.subs.forEach(x=>subs.push({t:x.t,ok:x.f(S,c)}));
+  if(subs.length)h+='<ul class="goals">'+subs.map(x=>'<li class="'+(x.ok?'ok':'')+'"><span class="mk">'+(x.ok?'✓':'')+'</span><span>'+x.t+'</span></li>').join('')+'</ul>';
+  if(done){
+    h+='<div class="tbox ans"><b>✅ 答え合わせ</b>';
+    if(st.predict)h+='<p>'+(pk===st.predict.correct?'予想どおり！ ':'予想と違いました。 ')+st.predict.why+'</p>';
+    if(st.after)h+=st.after;
+    h+='</div>';
+  }else{
+    const hs=st.hints||(st.hint?[st.hint]:[]),hc=t.hint[t.step]||0;
+    for(let k=0;k<hc&&k<hs.length;k++)h+='<div class="hintbox"><b>ヒント'+(hs.length>1?(k+1):'')+'：</b>'+hs[k]+'</div>';
+    if(hc<hs.length)h+='<button class="btn ghost" onclick="tutHint('+i+','+t.step+')">'+(hc?'次のヒントを見る':'詰まったらヒント')+(hs.length>1?'（'+hc+'/'+hs.length+'）':'')+'</button>';
+  }
+  h+='<div class="tnav">'+(t.step>0?'<button class="btn ghost" onclick="tutBack('+i+')">← 前へ</button>':'')+'<button class="btn" '+(done||testOn()?'':'disabled')+' onclick="tutNext('+i+')">'+(t.step===n-1?(last?'問'+(i+1)+'を完了する':'問'+(i+1)+'を完了する'):'次のステップへ →')+(!done&&testOn()?'（スキップ）':'')+'</button></div>';
+  return h;
+}
+function tutPick(k,st,p){tstate(S,k).pred[st]=p;save();renderMission();}
+function tutHint(k,st){const t=tstate(S,k);t.hint[st]=(t.hint[st]||0)+1;S.hintsUsed++;save();renderHeader();renderMission();}
+function tutNext(k){
+  const r=tutAdvance(S,k,testOn());
+  if(r==='cleared')toast('🎉 問'+(k+1)+' 達成！');
+  if(r){save();applyFocus();ui.msg=null;renderAll();}
+}
+function tutBack(k){const t=tstate(S,k);if(t.step>0){t.step--;save();applyFocus();ui.msg=null;renderAll();}}
+function tutRestart(k){
+  if(!confirm('この問を最初から見直します。機器の設定も、この問の開始時点に戻ります。よろしいですか？'))return;
+  delete S.tutM[k];applyBase(S,k);beginMission(S,k);clearBrowsers();
+  Object.keys(TERM).forEach(x=>TERM[x]=[]);
+  save();applyFocus();ui.msg=null;renderAll();
+}
+// ---- 構成図 ----
+function blindNow(){const m=MISSIONS[S.mission],t=tstate(S,S.mission),st=m&&m.tutorial[t.step];return !!(st&&st.blind);}
+function devIpText(id){
+  const e=eff(S,id);
+  if(blindNow())return e.ifs.map(()=>'IP：？');
+  return e.ifs.map(i=>validIf(i)?i.ip:'IP未設定');
+}
+function renderDiagram(){
+  const conf=conflicts(S),confDevs=new Set(conf.flatMap(c=>c.devs));
+  const dim2=false;
+  const node=(id,x,y,w,h,icon,lines)=>{
+    const cls='node'+(ui.dev===id?' sel':'')+(confDevs.has(id)?' conf':'');
+    let t='<g class="'+cls+(id==='pc2'&&dim2?' dim':'')+'" data-id="'+id+'" onclick="selDev(\''+id+'\')">'+
+      '<rect class="nbox" x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="12"/>'+
+      '<text x="'+(x+w/2)+'" y="'+(y+24)+'" text-anchor="middle" font-size="15" font-weight="700" fill="#12263f">'+icon+' '+DEVS[id].label+(confDevs.has(id)?' ⚠':'')+'</text>';
+    lines.forEach((l,k)=>{t+='<text x="'+(x+w/2)+'" y="'+(y+46+k*18)+'" text-anchor="middle" font-size="12.5" font-family="Consolas,monospace" fill="'+(l.indexOf('未設定')>=0?'#9ca3af':'#1f2937')+'">'+esc(l)+'</text>';});
+    return t+'</g>';
+  };
+  const r=devIpText('router');
+  let s='';
+  s+='<path class="link" d="M160 80 H215 V250 H160"/><path class="link" d="M215 165 H330"/>';
+  s+='<g class="'+(dim2?'dim':'')+'"><path class="link" d="M430 165 H600"/><text class="lan" x="515" y="153" text-anchor="middle">LAN2（営業部）</text></g>';
+  s+='<text class="lan" x="225" y="150">LAN1</text><text class="lan" x="225" y="196">（経理・サーバ室）</text>';
+  s+=node('pc1',40,45,120,70,'🖥',devIpText('pc1'));
+  s+=node('server',40,215,120,70,'🗄',devIpText('server'));
+  s+=node('router',330,125,100,84,'📡',['①'+r[0],'②'+r[1]].map(x=>x.replace('IP未設定','未設定')));
+  s+=node('pc2',600,130,120,70,'🖥',devIpText('pc2'));
+  const fwd=S.dev.router.fwd;
+  s+='<g><rect x="338" y="218" width="84" height="22" rx="11" fill="'+(fwd?'#16a34a':'#9ca3af')+'"/><text x="380" y="234" text-anchor="middle" font-size="12" fill="#fff">転送 '+(fwd?'ON':'OFF')+'</text></g>';
+  const dhcpPcs=['pc1','pc2'].filter(id=>S.dev[id].mode==='dhcp').map(id=>DEVS[id].label+(eff(S,id).apipa?'：自動構成IP(169.254…)':'：DHCP取得')).join(' / ');
+  if(dhcpPcs)s+='<text x="380" y="300" text-anchor="middle" font-size="12" fill="#6b7280">'+esc(dhcpPcs)+'</text>';
+  if(conf.length)s+='<text x="380" y="320" text-anchor="middle" font-size="13" fill="#dc2626" font-weight="700">⚠ IPアドレス競合：'+esc(conf.map(c=>c.ip).join(', '))+'</text>';
+  $('diagram').innerHTML=s;
+}
+function flash(path,ok){
+  path.forEach((d,i)=>setTimeout(()=>{
+    const el=document.querySelector('#diagram g[data-id="'+d+'"]');
+    if(el){el.classList.add(ok?'flash-ok':'flash-ng');setTimeout(()=>el.classList.remove('flash-ok','flash-ng'),700);}
+  },i*250));
+}
+
+// ---- タブ・パネル ----
+function selDev(id){ui.dev=id;ui.msg=null;renderDiagram();renderPanel();}
+function setView(v){ui.view=v;ui.msg=null;renderPanel();}
+function renderTabs(){
+  const cs=new Set(conflicts(S).flatMap(c=>c.devs));
+  $('tabs').innerHTML=Object.keys(DEVS).map(id=>'<button class="'+(ui.dev===id?'on':'')+'" onclick="selDev(\''+id+'\')"><span class="st '+(cs.has(id)?'conf':'')+'"></span>'+DEVS[id].label+'</button>').join('');
+}
+function renderPanel(){
+  renderTabs();
+  if(ui.view==='web'&&!isPC(ui.dev))ui.view='cfg';
+  $('viewsw').innerHTML='<button class="'+(ui.view==='cfg'?'on':'')+'" onclick="setView(\'cfg\')">⚙ 設定画面</button><button class="'+(ui.view==='term'?'on':'')+'" onclick="setView(\'term\')">⌨ ターミナル</button><button class="'+(ui.view==='calc'?'on':'')+'" onclick="setView(\'calc\')">🧮 計算機</button>'+(isPC(ui.dev)?'<button class="'+(ui.view==='web'?'on':'')+'" onclick="setView(\'web\')">🌐 ブラウザ</button>':'');
+  const id=ui.dev;
+  if(ui.view==='term'){renderTerm(id);return;}
+  if(ui.view==='web'){renderBrowser(id);return;}
+  if(ui.view==='calc'){renderCalc();return;}
+  let h='';
+  const cs=conflicts(S).filter(c=>c.devs.includes(id));
+  if(cs.length)h+='<div class="msg err">⚠ IPアドレス '+esc(cs.map(c=>c.ip).join(', '))+' は、同じLAN内の別の機器でも使われています（IPアドレスの競合）。</div>';
+  if(ui.msg)h+='<div class="msg '+ui.msg.type+'">'+ui.msg.lines.map(esc).join('<br>')+'</div>';
+  h+=id==='router'?formRouter():id==='server'?formServer():formPC(id);
+  $('pbody').innerHTML=h;
+  ui.msg=null;
+  if(id!=='router'&&id!=='server')modeToggle();
+}
+const v=x=>esc(x||'');
+function formPC(id){
+  const d=S.dev[id],dh=d.mode==='dhcp';
+  return '<div class="win"><div class="wt">インターネット プロトコル バージョン 4 (TCP/IPv4) のプロパティ — '+DEVS[id].label+'</div><div class="wb">'+
+   '<label class="r"><input type="radio" name="mode" value="dhcp" '+(dh?'checked':'')+' onchange="modeToggle()"> IP アドレスを自動的に取得する(O)</label>'+
+   '<label class="r"><input type="radio" name="mode" value="manual" '+(dh?'':'checked')+' onchange="modeToggle()"> 次の IP アドレスを使う(S):</label>'+
+   '<div class="fld"><span>IP アドレス(I):</span><input type="text" id="f-ip" value="'+v(d.ip)+'" placeholder="例 192.168.1.11">'+
+   '<span>サブネット マスク(U):</span><input type="text" id="f-mask" value="'+v(d.mask)+'">'+
+   '<span>デフォルト ゲートウェイ(D):</span><input type="text" id="f-gw" value="'+v(d.gw)+'"></div>'+
+   '<div class="fld"><span>優先 DNS サーバー(P):</span><input type="text" id="f-dns" value="'+v(d.dns)+'"></div>'+
+   '</div><div class="wf"><button class="btn" onclick="applyPC(\''+id+'\')">OK（適用）</button></div></div>'+
+   '<div class="tip">自動取得にした場合の結果は、ターミナルの <code>ipconfig</code> で確認できます。</div>';
+}
+function modeToggle(){
+  const m=document.querySelector('input[name=mode]:checked');if(!m)return;
+  const dh=m.value==='dhcp';
+  ['f-ip','f-mask','f-gw','f-dns'].forEach(k=>{const e=$(k);if(e)e.disabled=dh;});
+}
+function formRouter(){
+  const r=S.dev.router;
+  return '<div class="win"><div class="wt">ルータ設定画面（簡易）</div><div class="wb">'+
+   '<div class="sec">ポート1（LAN1側）</div><div class="fld wide"><span>IP アドレス:</span><input type="text" id="r1-ip" value="'+v(r.if1.ip)+'"><span>サブネット マスク:</span><input type="text" id="r1-mask" value="'+v(r.if1.mask)+'"></div>'+
+   '<div class="sec">ポート2（LAN2側）</div><div class="fld wide"><span>IP アドレス:</span><input type="text" id="r2-ip" value="'+v(r.if2.ip)+'"><span>サブネット マスク:</span><input type="text" id="r2-mask" value="'+v(r.if2.mask)+'"></div>'+
+   '<div class="sec">ルーティング</div><label class="r"><input type="checkbox" id="r-fwd" '+(r.fwd?'checked':'')+'> IPルーティング（異なるネットワーク間のパケット転送）を有効にする</label>'+
+   '</div><div class="wf"><button class="btn" onclick="applyRouter()">適用</button></div></div>';
+}
+function formServer(){
+  const d=S.dev.server,dh=d.dhcp,dn=d.dnsSvc;
+  let rec='';
+  const rows=dn.records.concat([{name:'',ip:''}]);
+  rows.forEach(r=>{rec+='<div class="recrow"><input class="rn" type="text" value="'+v(r.name)+'" placeholder="名前 例 www.toyosho.example"><input class="ri" type="text" value="'+v(r.ip)+'" placeholder="IPアドレス"></div>';});
+  return '<div class="win"><div class="wt">サーバ設定画面</div><div class="wb">'+
+   '<div class="sec">ネットワーク</div><div class="fld wide"><span>IP アドレス:</span><input type="text" id="s-ip" value="'+v(d.ip)+'"><span>サブネット マスク:</span><input type="text" id="s-mask" value="'+v(d.mask)+'"><span>デフォルト ゲートウェイ:</span><input type="text" id="s-gw" value="'+v(d.gw)+'"></div>'+
+   '<div class="sec">DHCPサービス</div><label class="r"><input type="checkbox" id="dh-on" '+(dh.on?'checked':'')+'> DHCPサービスを有効にする</label>'+
+   '<div class="fld wide"><span>配布開始アドレス:</span><input type="text" id="dh-start" value="'+v(dh.start)+'"><span>配布終了アドレス:</span><input type="text" id="dh-end" value="'+v(dh.end)+'"><span>配るサブネットマスク:</span><input type="text" id="dh-mask" value="'+v(dh.mask)+'"><span>配るゲートウェイ:</span><input type="text" id="dh-gw" value="'+v(dh.gw)+'"><span>配るDNSサーバー:</span><input type="text" id="dh-dns" value="'+v(dh.dns)+'"></div>'+
+   '<div class="sec">DNSサービス</div><label class="r"><input type="checkbox" id="dn-on" '+(dn.on?'checked':'')+'> DNSサービスを有効にする</label>'+
+   '<div class="note">名前とIPアドレスの対応表（レコード）。空の行に入力すると追加、名前を空にすると削除されます。</div>'+rec+
+   webSec(d.web)+'</div><div class="wf"><button class="btn" onclick="applyServer()">適用</button></div></div>';
+}
+function showMsg(type,lines){
+  // エラー表示で画面を描き直しても、入力中の値が消えないように保持する
+  const keep={},rn=[...document.querySelectorAll('#pbody .rn')].map(e=>e.value),ri=[...document.querySelectorAll('#pbody .ri')].map(e=>e.value);
+  document.querySelectorAll('#pbody input[id]').forEach(e=>{keep[e.id]=e.type==='checkbox'?e.checked:e.value;});
+  const md=document.querySelector('#pbody input[name=mode]:checked'),mode=md?md.value:null;
+  ui.msg={type,lines};renderPanel();
+  Object.keys(keep).forEach(k=>{const e=$(k);if(e){if(e.type==='checkbox')e.checked=keep[k];else e.value=keep[k];}});
+  [...document.querySelectorAll('#pbody .rn')].forEach((e,i)=>{if(rn[i]!=null)e.value=rn[i];});
+  [...document.querySelectorAll('#pbody .ri')].forEach((e,i)=>{if(ri[i]!=null)e.value=ri[i];});
+  if(mode){const r=document.querySelector('#pbody input[name=mode][value='+mode+']');if(r){r.checked=true;if(typeof modeToggle==='function')modeToggle();}}
+}
+const gv=id=>($(id)?$(id).value.trim():'');
+// ---- 入力の妥当性チェック（実務で起こる設定ミスを、適用の時点で検出する） ----
+function addrProblem(ip,mask,label){
+  const n=ip2n(ip);if(n===null||!maskOk(mask))return '';
+  const p=parsePrefix(mask);if(p===null||p>=31)return '';
+  const m=ip2n(mask),net=(n&m)>>>0,bc=(net|((~m)>>>0))>>>0;
+  if(n===net)return label+'「'+ip+'」は、このネットワークの<b>ネットワークアドレス</b>です。機器には設定できません（ホスト部が全部0）';
+  if(n===bc)return label+'「'+ip+'」は、このネットワークの<b>ブロードキャストアドレス</b>です。機器には設定できません（ホスト部が全部1）';
+  return '';
+}
+function gwProblem(ip,mask,gw){
+  if(!gw||ip2n(gw)===null||ip2n(ip)===null||!maskOk(mask))return '';
+  if(!sameNet(ip,gw,mask))return 'ゲートウェイ「'+gw+'」が、自分のIPアドレス（'+ip+' ／ '+mask+'）と同じネットワークにありません。ゲートウェイは、同じネットワーク内のルータのアドレスにします';
+  if(gw===ip)return 'ゲートウェイが自分自身のIPアドレスと同じです';
+  return addrProblem(gw,mask,'ゲートウェイ');
+}
+function applyPC(id){
+  const mode=document.querySelector('input[name=mode]:checked').value,d=S.dev[id],errs=[];
+  if(mode==='manual'){
+    const ip=gv('f-ip'),mask=gv('f-mask'),gw=gv('f-gw'),dns=gv('f-dns');
+    if(ip2n(ip)===null)errs.push('IP アドレスの形式が正しくありません（例: 192.168.1.11）');
+    if(!maskOk(mask))errs.push('サブネット マスクが正しくありません（例: 255.255.255.0）');
+    if(gw&&ip2n(gw)===null)errs.push('デフォルト ゲートウェイの形式が正しくありません');
+    if(dns&&ip2n(dns)===null)errs.push('DNS サーバーの形式が正しくありません');
+    if(!errs.length){[addrProblem(ip,mask,'IPアドレス'),gwProblem(ip,mask,gw)].forEach(x=>{if(x)errs.push(x);});}
+    if(errs.length){showMsg('err',errs);return;}
+    Object.assign(d,{mode:'manual',ip,mask,gw,dns,lease:null});
+    ui.msg={type:'okm',lines:['設定を適用しました。']};
+  }else{
+    d.mode='dhcp';const r=renew(S,id);
+    ui.msg=r.ok?{type:'okm',lines:['DHCPサーバーからアドレスを取得しました。（ipconfig で確認できます）']}:
+      {type:'warn',lines:['DHCPサーバーからアドレスを取得できませんでした。自動構成のIPアドレス（169.254.x.x）になっています。']};
+  }
+  afterChange();renderPanel();
+}
+function applyRouter(){
+  const r=S.dev.router,errs=[];
+  const a=gv('r1-ip'),am=gv('r1-mask'),b=gv('r2-ip'),bm=gv('r2-mask');
+  if(a&&ip2n(a)===null)errs.push('ポート1のIPアドレスの形式が正しくありません');
+  if(b&&ip2n(b)===null)errs.push('ポート2のIPアドレスの形式が正しくありません');
+  if(!maskOk(am))errs.push('ポート1のサブネットマスクが正しくありません');
+  if(!maskOk(bm))errs.push('ポート2のサブネットマスクが正しくありません');
+  if(!errs.length){
+    [addrProblem(a,am,'ポート1のIPアドレス'),addrProblem(b,bm,'ポート2のIPアドレス')].forEach(x=>{if(x)errs.push(x);});
+    if(a&&b&&ip2n(a)!==null&&ip2n(b)!==null){const mm=(ip2n(am)&ip2n(bm))>>>0;
+      if(((ip2n(a)&mm)>>>0)===((ip2n(b)&mm)>>>0))errs.push('ポート1とポート2のネットワークが重なっています。ルータの各ポートは、別々のネットワーク（重ならないサブネット）に置きます');}
+  }
+  if(errs.length){showMsg('err',errs);return;}
+  r.if1={ip:a,mask:am};r.if2={ip:b,mask:bm};r.fwd=$('r-fwd').checked;
+  ui.msg={type:'okm',lines:['設定を適用しました。']};
+  afterChange();renderPanel();
+}
+function applyServer(){
+  const d=S.dev.server,errs=[];
+  const ip=gv('s-ip'),mask=gv('s-mask'),gw=gv('s-gw');
+  if(ip2n(ip)===null)errs.push('サーバのIPアドレスの形式が正しくありません');
+  if(!maskOk(mask))errs.push('サーバのサブネットマスクが正しくありません');
+  if(gw&&ip2n(gw)===null)errs.push('サーバのゲートウェイの形式が正しくありません');
+  const dh={on:$('dh-on').checked,start:gv('dh-start'),end:gv('dh-end'),mask:gv('dh-mask'),gw:gv('dh-gw'),dns:gv('dh-dns')};
+  ['start','end','gw','dns'].forEach(k=>{if(dh[k]&&ip2n(dh[k])===null)errs.push('DHCPの「'+({start:'配布開始',end:'配布終了',gw:'ゲートウェイ',dns:'DNS'}[k])+'」の形式が正しくありません');});
+  if(!errs.length){
+    [addrProblem(ip,mask,'サーバのIPアドレス'),gwProblem(ip,mask,gw)].forEach(x=>{if(x)errs.push(x);});
+    if(dh.on){
+      if(!maskOk(dh.mask))errs.push('DHCPの「配るサブネットマスク」が正しくありません（例: 255.255.255.0）');
+      else if(dh.start&&dh.end){
+        const a=ip2n(dh.start),b=ip2n(dh.end),m=ip2n(dh.mask);
+        if(a>b)errs.push('DHCPの配布開始が配布終了より後になっています');
+        else{
+          const ref=dh.gw||ip;
+          if(!sameNet(dh.start,ref,dh.mask)||!sameNet(dh.end,ref,dh.mask))errs.push('DHCPの配布範囲が、配るゲートウェイ（'+ref+'）と同じネットワークの内側にありません');
+          const net=(a&m)>>>0,bc=(net|((~m)>>>0))>>>0;
+          if(a<=net&&net<=b)errs.push('DHCPの配布範囲に、ネットワークアドレス（'+n2ip(net)+'）が含まれています');
+          if(a<=bc&&bc<=b)errs.push('DHCPの配布範囲に、ブロードキャストアドレス（'+n2ip(bc)+'）が含まれています');
+          const fixed=[ip,dh.gw,S.dev.router.if1.ip,S.dev.router.if2.ip].filter(x=>x&&ip2n(x)!==null);
+          [...new Set(fixed)].forEach(f=>{const x=ip2n(f);if(x>=a&&x<=b)errs.push('DHCPの配布範囲に、固定で使っているアドレス '+f+' が含まれています（競合のもとです）');});
+        }
+      }
+    }
+  }
+  const names=[...document.querySelectorAll('.rn')],ips=[...document.querySelectorAll('.ri')],records=[];
+  names.forEach((n,k)=>{const nm=n.value.trim(),ad=ips[k].value.trim();
+    if(!nm)return;
+    if(ip2n(ad)===null)errs.push('レコード「'+nm+'」のIPアドレスの形式が正しくありません');
+    else records.push({name:nm,ip:ad});});
+  const web={http:$('w-http').checked,httpPort:gv('w-http-port'),https:$('w-https').checked,httpsPort:gv('w-https-port')};
+  ['httpPort','httpsPort'].forEach(k=>{const n=/^\d{1,5}$/.test(web[k])?parseInt(web[k],10):0;
+    if(n<1||n>65535)errs.push((k==='httpPort'?'HTTP':'HTTPS')+'のポート番号は 1〜65535 の数字で入力してください');else web[k]=String(n);});
+  if(errs.length){showMsg('err',errs);return;}
+  Object.assign(d,{ip,mask,gw});d.dhcp=dh;d.dnsSvc={on:$('dn-on').checked,records};d.web=web;
+  ui.msg={type:'okm',lines:['設定を適用しました。（DHCPで配る内容を変えたときは、PC側で ipconfig /renew が必要です）']};
+  afterChange();renderPanel();
+}
+
+// ---- ブラウザ・Webサービス設定 ----
+const BR={};
+function isPC(id){return id==='pc1'||id==='pc2';}
+function clearBrowsers(){Object.keys(BR).forEach(k=>delete BR[k]);}
+function webSec(w){
+  w=w||{http:false,httpPort:'80',https:false,httpsPort:'443'};
+  const st='style="width:72px;font-family:Consolas,monospace"';
+  return '<div class="sec">Webサービス</div>'+
+   '<label class="r"><input type="checkbox" id="w-http" '+(w.http?'checked':'')+'> HTTPサービスを有効にする　ポート番号：<input type="text" id="w-http-port" '+st+' value="'+v(w.httpPort)+'"></label>'+
+   '<label class="r"><input type="checkbox" id="w-https" '+(w.https?'checked':'')+'> HTTPSサービスを有効にする　ポート番号：<input type="text" id="w-https-port" '+st+' value="'+v(w.httpsPort)+'"></label>';
+}
+function pageHtml(id,b){
+  const r=b&&b.res;
+  if(!r)return '<p class="note">アドレスバーにURLを入力して「開く」を押してください。<br>例：<code>http://www.toyosho.example</code></p>';
+  const H=esc(r.host);
+  const err=(t,sub,code)=>'<div class="errpage"><div class="ico">😕</div><h1>'+t+'</h1><p>'+sub+'</p><code>'+code+'</code></div>';
+  switch(r.kind){
+    case 'ok':return '<h1>'+esc(r.page.title)+'</h1><ul>'+r.page.lines.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>';
+    case 'notfound':return '<h1>404 Not Found</h1><p>要求されたページは、このサーバーには見つかりませんでした。</p>';
+    case 'badreq':return '<h1>400 Bad Request</h1><p>HTTPSの窓口に、暗号化されていない（http の）要求が送られました。</p>';
+    case 'noname':return err('このサイトにアクセスできません','<b>'+H+'</b> のDNSアドレスが見つかりませんでした。','ERR_NAME_NOT_RESOLVED');
+    case 'timeout':return err('このサイトにアクセスできません','<b>'+H+'</b> からの応答時間が長すぎます。','ERR_CONNECTION_TIMED_OUT');
+    case 'refused':return err('このサイトにアクセスできません','<b>'+H+'</b> で接続が拒否されました。','ERR_CONNECTION_REFUSED');
+    case 'sslerr':return err('このサイトは安全に接続できません','<b>'+H+'</b> が無効な応答を送信しました。','ERR_SSL_PROTOCOL_ERROR');
+    case 'cert':return '<div class="errpage"><div class="ico">⚠️</div><h1>接続のプライバシーが保護されていません</h1><p><b>'+H+'</b> に対する攻撃者が、情報（パスワードなど）を盗み取ろうとしている可能性があります。</p><code>NET::ERR_CERT_COMMON_NAME_INVALID</code><p style="margin-top:12px"><button class="btn ghost" onclick="browseInsecure(\''+id+'\')">詳細設定 → '+H+' にアクセスする（安全ではありません）</button></p></div>';
+    default:return err('URLの形式が正しくありません','入力を確認してください。','ERR_INVALID_URL');
+  }
+}
+function renderBrowser(id){
+  const b=BR[id]||{},r=b.res;
+  let sec='';
+  if(r){
+    if(r.scheme==='https'&&r.kind==='cert')sec='<span class="bsec ng">⚠ 保護されていません</span>';
+    else if(r.scheme==='https'&&(r.kind==='ok'||r.kind==='notfound'))sec=r.insecure?'<span class="bsec ng">⚠ 証明書エラー</span>':'<span class="bsec ok">🔒 保護された通信</span>';
+    else if(r.scheme==='http'&&(r.kind==='ok'||r.kind==='notfound'))sec='<span class="bsec warn">保護されていない通信</span>';
+  }
+  $('pbody').innerHTML='<div class="browser"><div class="bbar">'+sec+'<input id="b-url" autocomplete="off" spellcheck="false" value="'+esc(b.input||'')+'" placeholder="http://www.toyosho.example"><button class="btn" onclick="browseGo(\''+id+'\',$(\'b-url\').value)">開く</button></div><div class="bpage">'+pageHtml(id,b)+'</div></div>'+
+    '<div class="tip">'+DEVS[id].label+'のブラウザです。名前やIPアドレスを指定して開けます（例：<code>https://192.168.1.10:8443</code>）。</div>';
+  const inp=$('b-url');
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')browseGo(id,inp.value);});
+}
+function browseGo(id,url,insecure){
+  url=(url||'').trim();if(!url)return;
+  const r=httpGet(S,id,url,{insecure:!!insecure});
+  r.insecure=!!insecure&&r.kind==='ok'&&r.scheme==='https'&&ip2n(r.host)!==null;
+  logWeb(S,id,r,'browser');
+  BR[id]={input:url,res:r};
+  if(r.route)flash(r.route,r.kind==='ok'||r.kind==='notfound');
+  afterChange();renderPanel();
+}
+function browseInsecure(id){const b=BR[id];if(b&&b.res)browseGo(id,b.res.url,true);}
+
+// ---- サブネット計算機・計算問題の画面 ----
+const CALC={ip:'192.168.1.10',mask:'/24'};
+function renderCalc(){
+  $('pbody').innerHTML='<div class="calc"><div class="note">実務では「サブネット計算ツール」で確認します。まず自分で計算してから、答え合わせに使いましょう。</div>'+
+   '<div class="fld wide"><span>IPアドレス：</span><input type="text" id="c-ip" autocomplete="off" value="'+esc(CALC.ip)+'" oninput="calcInput()">'+
+   '<span>マスク（/26 でも 255.255.255.192 でも可）：</span><input type="text" id="c-mask" autocomplete="off" value="'+esc(CALC.mask)+'" oninput="calcInput()"></div>'+
+   '<div id="c-out"></div></div>';
+  calcShow(false);
+}
+function calcInput(){CALC.ip=$('c-ip').value.trim();CALC.mask=$('c-mask').value.trim();calcShow(true);}
+function calcShow(log){
+  const out=$('c-out');if(!out)return;
+  const ip=ip2n(_fw(CALC.ip)),p=parsePrefix(CALC.mask);
+  if(ip===null||p===null){out.innerHTML='<div class="msg warn">IPアドレスと、マスク（/0〜/32 または 255.255.255.x）を入力してください。</div>';return;}
+  const ipS=_fw(CALC.ip),r=subnetInfo(ipS,p);
+  if(log){
+    const last=S.calcs[S.calcs.length-1];
+    if(!last||last.ip!==ipS||last.prefix!==p){S.calcs.push({ip:ipS,prefix:p});if(S.calcs.length>200)S.calcs.shift();save();renderMission();}
+  }
+  const u=p>=31?(p===31?'2台（2点間の専用リンク用）':'1台'):'2<sup>'+r.h+'</sup> − 2 = <b>'+r.usable+' 台</b>';
+  out.innerHTML='<div class="bitrow"><span class="bl">IPアドレス（2進数）　'+esc(ipS)+'</span><div class="bits">'+bitsHtml(ipS,p)+'</div></div>'+
+   '<div class="bitrow"><span class="bl">サブネットマスク（2進数）　'+n2ip(r.mask)+'</span><div class="bits">'+bitsHtml(n2ip(r.mask),p)+'</div></div>'+
+   '<div class="note"><span class="o net">青</span>＝ネットワーク部（町名）　<span class="o host">橙</span>＝ホスト部（番地）</div>'+
+   '<table class="calct">'+
+   '<tr><th>サブネットマスク</th><td class="m">'+n2ip(r.mask)+'（/'+p+'）</td></tr>'+
+   '<tr><th>ホスト部のビット数</th><td>'+r.h+' ビット（2<sup>'+r.h+'</sup> = '+r.tot+' 個のアドレス）</td></tr>'+
+   '<tr><th>ネットワークアドレス</th><td class="m">'+n2ip(r.net)+'</td></tr>'+
+   '<tr><th>ブロードキャスト</th><td class="m">'+n2ip(r.bc)+'</td></tr>'+
+   '<tr><th>使えるアドレスの範囲</th><td class="m">'+n2ip(r.first)+' 〜 '+n2ip(r.last)+'</td></tr>'+
+   '<tr><th>使える台数</th><td>'+u+'</td></tr></table>';
+}
+function quizHtml(k,idx,st){
+  const t=tstate(S,k),A=t.quiz[idx]||{},O=t.qok[idx]||{};
+  let h='<div class="tbox quiz"><b>✏️ '+(st.quiz.title||'自分で答えよう')+'</b>';
+  st.quiz.items.forEach(it=>{
+    const val=A[it.id]!=null?A[it.id]:'';
+    let mark='',fb='';
+    if(O[it.id]===true){mark='<span class="qm ok">✓ 正解</span>';if(it.exp)fb='<div class="qexp">'+it.exp+'</div>';}
+    else if(O[it.id]===false){mark='<span class="qm ng">✗ もう一度</span>';if(it.hint)fb='<div class="qhint">ヒント：'+it.hint+'</div>';}
+    h+='<div class="qi"><div class="ql">'+it.q+'</div>';
+    if(it.type==='choice'){
+      h+=it.opts.map((o,j)=>'<label class="qo"><input type="radio" name="q-'+idx+'-'+it.id+'" '+(String(val)===String(j)?'checked':'')+' onchange="quizSet('+k+','+idx+',\''+it.id+'\',\''+j+'\')"> '+esc(o)+'</label>').join('');
+    }else{
+      h+='<input class="qin" type="text" autocomplete="off" value="'+esc(val)+'" placeholder="'+esc(it.ph||'')+'" oninput="quizSet('+k+','+idx+',\''+it.id+'\',this.value)">';
+    }
+    h+=mark+fb+'</div>';
+  });
+  return h+'<button class="btn" onclick="quizCheck('+k+','+idx+')">答え合わせ</button></div>';
+}
+function quizSet(k,idx,id,val){
+  const t=tstate(S,k);(t.quiz[idx]=t.quiz[idx]||{})[id]=val;
+  if(t.qok[idx])delete t.qok[idx][id];
+  save();
+}
+function quizCheck(k,idx){
+  const all=qCheck(S,k,idx);save();renderMission();
+  if(all)toast('✓ すべて正解です！');
+}
+
+// ---- ターミナル ----
+function banner(id){
+  if(TERM[id].length)return;
+  TERM[id].push(id==='router'?'ルータ コンソール（演習用）。  help で使えるコマンドを表示します。':'ネットワーク演習用コマンドプロンプト。  help で使えるコマンドを表示します。','');
+}
+function renderTerm(id){
+  banner(id);
+  $('pbody').innerHTML='<div class="term" id="termout" onclick="$(\'cmd\').focus()"></div><div class="termin"><span>'+esc(PROMPT[id])+'</span><input id="cmd" autocomplete="off" spellcheck="false" autocapitalize="off"></div>'+
+    '<div class="tip">'+(id==='router'?'使えるコマンド： ping / show ip interface brief / cls':'使えるコマンド： ipconfig [/all /renew /release] / ping / nslookup / tracert / curl / cls')+'　（↑↓で履歴）</div>';
+  paintTerm();
+  const inp=$('cmd');inp.disabled=!!BUSY[id];
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){const l=inp.value;inp.value='';HIST_IDX[id]=null;runCommand(id,l);}
+    else if(e.key==='ArrowUp'||e.key==='ArrowDown'){
+      const h=S.hist[id];if(!h.length)return;
+      let k=HIST_IDX[id];if(k==null)k=h.length;
+      k+=e.key==='ArrowUp'?-1:1;k=Math.max(0,Math.min(h.length,k));HIST_IDX[id]=k;
+      inp.value=k===h.length?'':h[k];e.preventDefault();
+    }
+  });
+  if(!BUSY[id])inp.focus();
+}
+function paintTerm(){const el=$('termout');if(!el)return;el.textContent=TERM[ui.dev].join('\n');el.scrollTop=el.scrollHeight;}
+function termPush(id,l){TERM[id].push(l);if(ui.dev===id&&ui.view==='term')paintTerm();}
+function setBusy(id,b){BUSY[id]=b;if(ui.dev===id&&ui.view==='term'){const i=$('cmd');if(i){i.disabled=b;if(!b)i.focus();}}}
+async function runCommand(id,line){
+  if(BUSY[id])return;
+  const t=line.trim();
+  termPush(id,PROMPT[id]+line);
+  if(!t)return;
+  S.hist[id].push(t);if(S.hist[id].length>1000)S.hist[id].shift();
+  const parts=t.split(/\s+/),c=parts[0].toLowerCase(),argv=parts.slice(1);
+  setBusy(id,true);
+  try{
+    if(c==='cls'||c==='clear'){TERM[id].length=0;paintTerm();}
+    else if(id==='router'){
+      if(c==='ping'){const L=planPingRouter(S,argv);L.forEach(l=>termPush(id,l));logPing(S,'router',L.meta);}
+      else if(c==='show'&&argv.join(' ').toLowerCase().startsWith('ip int')){routerBrief(S).forEach(l=>termPush(id,l));}
+      else if(c==='help'||c==='?'){termPush(id,'ping <IPアドレス>\nshow ip interface brief\ncls');}
+      else termPush(id,"% Invalid input detected at '^' marker.");
+    }else{
+      if(c==='ping'){
+        const p=planPing(S,id,argv);
+        p.head.forEach(l=>termPush(id,l));
+        let first=true;
+        for(const r of p.replies){await sleep(420);termPush(id,r.text);if(first){flash(r.path,r.ok);first=false;}}
+        p.tail.forEach(l=>termPush(id,l));
+        logPing(S,id,p.meta);
+      }
+      else if(c==='ipconfig'){runIpconfig(S,id,argv).forEach(l=>termPush(id,l));}
+      else if(c==='nslookup'){planNslookup(S,id,argv).forEach(l=>termPush(id,l));}
+      else if(c==='curl'){const cu=planCurl(S,id,argv);cu.lines.forEach(l=>termPush(id,l));logWeb(S,id,cu.res,'curl');}
+      else if(c==='tracert'){planTracert(S,id,argv).forEach(l=>termPush(id,l));}
+      else if(c==='help'){termPush(id,'ipconfig [/all | /renew | /release]\nping [-n 回数] 宛先\nnslookup 名前\ntracert 宛先\ncurl [-i] [-k] URL\ncls');}
+      else termPush(id,"'"+parts[0]+"' は、内部コマンドまたは外部コマンド、操作可能なプログラムまたはバッチ ファイルとして認識されていません。");
+    }
+  }finally{setBusy(id,false);}
+  afterChange();
+}
+
+// ---- 全体 ----
+function renderAll(){renderHeader();renderDiagram();renderMission();renderPanel();}
+function resetAll(){
+  if(!confirm('設定も進み具合もすべて消して、最初からやり直しますか？'))return;
+  S=freshState();beginMission(S,0);Object.keys(TERM).forEach(k=>TERM[k]=[]);clearBrowsers();save();ui.dev='pc1';ui.view='cfg';ui.msg=null;applyFocus();renderAll();
+}
+beginMission(S,Math.min(S.mission||0,MISSIONS.length-1));
+save();
+applyFocus();
+renderAll();
+
+</script>
+<script>window.FORCE_TEACHER=true;</script>
+<script>
+// ====================================================================
+//  ペア対戦レイヤー（Firebase Realtime Database で2人の状態を共有する）
+//  ・FIREBASE_CONFIG に databaseURL があれば Firebase、無ければ「同じブラウザの別タブ」で動くテストモード（?db=local で強制）
+// ====================================================================
+const FIREBASE_CONFIG={
+  apiKey: "AIzaSyDUGvhCpX8SRfiq2NYpf0YAHzTBoBd_k10",
+  authDomain: "networkbuildinggame.firebaseapp.com",
+  databaseURL: "https://networkbuildinggame-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "networkbuildinggame",
+  storageBucket: "networkbuildinggame.firebasestorage.app",
+  messagingSenderId: "795457639530",
+  appId: "1:795457639530:web:9031eb0b4ad93b7d7d6613"
+};
+const ROOT='netpair/v1';
+const URLQ=new URLSearchParams(location.search);
+const TEACHER=window.FORCE_TEACHER===true||URLQ.get('teacher')==='1';
+const USE_FB=!!(FIREBASE_CONFIG&&FIREBASE_CONFIG.databaseURL)&&URLQ.get('db')!=='local';
+
+// ---------- DB 抽象化 ----------
+const LS_KEY='netpair_local_v1';
+const lsRead=()=>{try{return JSON.parse(localStorage.getItem(LS_KEY))||{};}catch(e){return {};}};
+const lsWrite=t=>{try{localStorage.setItem(LS_KEY,JSON.stringify(t));}catch(e){}};
+const getAt=(t,p)=>{let x=t;for(const k of p.split('/')){if(x==null||typeof x!=='object')return null;x=x[k];}return x===undefined?null:x;};
+function setAt(t,p,v){const ks=p.split('/');let x=t;for(let i=0;i<ks.length-1;i++){if(typeof x[ks[i]]!=='object'||x[ks[i]]===null)x[ks[i]]={};x=x[ks[i]];}
+  const k=ks[ks.length-1];if(v===null||v===undefined)delete x[k];else x[k]=JSON.parse(JSON.stringify(v));}
+const LST=[];
+function lsFire(){const t=lsRead();LST.slice().forEach(l=>{const v=getAt(t,l.path),j=JSON.stringify(v);if(j!==l.last){l.last=j;l.cb(v===null?null:JSON.parse(j));}});}
+window.addEventListener('storage',e=>{if(e.key===LS_KEY)lsFire();});
+const LocalDB={
+  set(p,v){const t=lsRead();setAt(t,p,v);lsWrite(t);lsFire();return Promise.resolve();},
+  update(p,o){const t=lsRead();for(const k in o)setAt(t,p+'/'+k,o[k]);lsWrite(t);lsFire();return Promise.resolve();},
+  remove(p){return this.set(p,null);},
+  on(p,cb){const l={path:p,cb,last:undefined};LST.push(l);setTimeout(()=>{const v=getAt(lsRead(),p);l.last=JSON.stringify(v);cb(v);},0);return()=>{const i=LST.indexOf(l);if(i>=0)LST.splice(i,1);};},
+  txn(p,fn){const t=lsRead(),cur=getAt(t,p),nv=fn(cur===null?null:JSON.parse(JSON.stringify(cur)));
+    if(nv===undefined)return Promise.resolve({committed:false});setAt(t,p,nv);lsWrite(t);lsFire();return Promise.resolve({committed:true});}
+};
+let FBDB=null;
+const FireDB={
+  set:(p,v)=>FBDB.ref(p).set(v),
+  update:(p,o)=>FBDB.ref(p).update(o),
+  remove:p=>FBDB.ref(p).remove(),
+  on(p,cb){const r=FBDB.ref(p),h=r.on('value',s=>cb(s.val()));return()=>r.off('value',h);},
+  txn:(p,fn)=>FBDB.ref(p).transaction(c=>fn(c)).then(r=>({committed:r.committed}))
+};
+let DB=LocalDB;
+const dbSet=(p,v)=>DB.set(ROOT+'/'+p,v);
+const dbUpdate=(p,o)=>DB.update(ROOT+'/'+p,o);
+const dbRemove=p=>DB.remove(ROOT+'/'+p);
+const dbOn=(p,cb)=>DB.on(ROOT+'/'+p,cb);
+const dbTxn=(p,fn)=>DB.txn(ROOT+'/'+p,fn);
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('load '+src));document.head.appendChild(s);});}
+async function initDB(){
+  if(!USE_FB){DB=LocalDB;return 'local';}
+  await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
+  await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js');
+  firebase.initializeApp(FIREBASE_CONFIG);FBDB=firebase.database();DB=FireDB;return 'firebase';
+}
+
+// ---------- 白紙の状態と、ペアの担当 ----------
+const SP={sv:'192.168.1.10',pc1:'192.168.1.11',r1:'192.168.1.1',r2:'192.168.2.1',pc2:'192.168.2.21',m:'255.255.255.0'};
+const OWN={A:['server','pc1'],B:['router','pc2']};
+const ROLE_LABEL={A:'A（サーバ・PC①）',B:'B（ルータ・PC②）'};
+function blankDevs(){
+  const d=freshState().dev;
+  d.router.if1.mask='';d.router.if2.mask='';d.server.mask='';d.server.dhcp.mask='';d.pc1.mask='';d.pc2.mask='';
+  return d;
+}
+const clone=o=>JSON.parse(JSON.stringify(o));
+function dmerge(d,v){
+  if(v==null)return clone(d);
+  if(Array.isArray(d)||typeof d!=='object'||d===null)return v;
+  const o=clone(d);
+  for(const k in v){
+    if(d&&typeof d[k]==='object'&&d[k]!==null&&!Array.isArray(d[k])&&typeof v[k]==='object'&&v[k]!==null)o[k]=dmerge(d[k],v[k]);
+    else o[k]=v[k];
+  }
+  return o;
+}
+const ME={team:null,name:'',role:null};
+const TEAM={members:{},prog:null};
+const mine=id=>!!ME.role&&OWN[ME.role].includes(id);
+const eqd=(a,b)=>(a||'').trim()===b;
+const LASTW={};
+
+// ---------- ステージ定義 ----------
+const sheet=(who,title,body,note)=>`<div class="tbox do"><b>📋 要件書（${who}）</b><p><b>${title}</b></p>${body}${note?'<p class="note">'+note+'</p>':''}</div>`;
+const row=(a,b)=>`<tr><td>${a}</td><td class="m">${b}</td></tr>`;
+const tbl=rows=>'<table class="sheet"><tr><th>項目</th><th>値</th></tr>'+rows.join('')+'</table>';
+const reach=(S,src,dst)=>{const r=ping1(S,src,dst);return !!r.ok&&!r.conflict;};
+const leaseIp=S=>{const l=S.dev.pc1.lease;return l&&S.dev.pc1.mode==='dhcp'?l.ip:null;};
+const reach4=S=>{const l=leaseIp(S);return conflicts(S).length===0&&reach(S,'pc1',SP.sv)&&reach(S,'pc1',SP.pc2)&&reach(S,'pc2',SP.sv)&&!!l&&reach(S,'pc2',l);};
+const PG=(id,owner,src,dst,t)=>({id,owner,src,dst,t});
+const FAULT_PINGS=[PG('p1','A','pc1',SP.sv,'PC① から サーバ へ ping で返事が来る'),PG('p2','A','pc1',SP.pc2,'PC① から PC② へ ping で返事が来る'),
+  PG('p3','B','pc2',SP.sv,'PC② から サーバ へ ping で返事が来る'),PG('p4','B','pc2',S=>leaseIp(S),'PC② から PC①（いま取得中のアドレス）へ ping で返事が来る')];
+const FAULT_CFG=[{id:'c1',owner:'both',t:'ネットワーク全体で、4つの経路がすべて通っている',ok:S=>reach4(S)}];
+const STAGES=[
+{key:'s1',title:'LANを作る',kind:'build',base:100,secPer:12,
+ sheet:{A:sheet('A：サーバ・PC①担当','LAN1（経理・サーバ室）を作る',tbl([row('LAN1 のネットワーク','192.168.1.0 ／ マスク 255.255.255.0'),row('サーバ','192.168.1.10'),row('PC①','192.168.1.11'),row('ルータ ポート1（LAN1側）','192.168.1.1　※ルータ担当のBさんに伝える')]),'LAN2（営業部）は、Bさんの担当です。向こうのアドレスは、Bさんに聞いてください。'),
+        B:sheet('B：ルータ・PC②担当','LAN2（営業部）を作り、ルータを設置する',tbl([row('LAN2 のネットワーク','192.168.2.0 ／ マスク 255.255.255.0'),row('PC②','192.168.2.21'),row('ルータ ポート2（LAN2側）','192.168.2.1'),row('ルータ ポート1（LAN1側）','LAN1 のアドレス体系は <b>Aさんに聞く</b>（マスクも）')]),'LAN1（経理・サーバ室）の機器のアドレスも、Aさんに聞いてください。')},
+ cfg:[{id:'cA',owner:'A',t:'サーバ・PC①が、要件どおり設定されている',ok:S=>eqd(S.dev.server.ip,SP.sv)&&eqd(S.dev.server.mask,SP.m)&&S.dev.pc1.mode==='manual'&&eqd(S.dev.pc1.ip,SP.pc1)&&eqd(S.dev.pc1.mask,SP.m)},
+      {id:'cB',owner:'B',t:'ルータ・PC②が、要件どおり設定されている',ok:S=>eqd(S.dev.router.if1.ip,SP.r1)&&eqd(S.dev.router.if1.mask,SP.m)&&eqd(S.dev.router.if2.ip,SP.r2)&&eqd(S.dev.router.if2.mask,SP.m)&&S.dev.pc2.mode==='manual'&&eqd(S.dev.pc2.ip,SP.pc2)&&eqd(S.dev.pc2.mask,SP.m)}],
+ pings:[PG('p1','A','pc1',SP.sv,'PC① から サーバ へ ping で返事が来る'),PG('p2','A','pc1',SP.r1,'PC① から ルータ（LAN1側）へ ping で返事が来る'),
+        PG('p3','B','pc2',SP.r2,'PC② から ルータ（LAN2側）へ ping で返事が来る'),PG('p4','B','router',SP.sv,'ルータ から サーバ へ ping で返事が来る')],
+ hints:['まず、相手と<b>自分の担当機器のアドレス</b>を口頭で共有しよう。ルータのポート1のアドレスは、Aの要件書にしかありません。','設定したら、ターミナルで確認しよう（PCとサーバは <code>ipconfig</code>、ルータは <code>show ip interface brief</code>）。','ping が通らないときは、両方の機器のIPアドレスとサブネットマスクを見比べよう。<b>同じ町（ネットワーク部が同じ）</b>になっていますか？','【答え】サーバ 192.168.1.10／PC① 192.168.1.11／ルータ ポート1 192.168.1.1・ポート2 192.168.2.1／PC② 192.168.2.21。マスクはすべて 255.255.255.0。']},
+{key:'s2',title:'部署をつなぐ',kind:'build',base:100,secPer:12,
+ sheet:{A:sheet('A：サーバ・PC①担当','LAN1 の機器が、LAN2（営業部）とも通信できるようにする',tbl([row('サーバ・PC①','LAN2 の機器と ping で通信できること'),row('LAN2 の PC②','アドレスは <b>Bさんに聞く</b>')]),'どの設定が必要かは、自分で考えましょう。'),
+        B:sheet('B：ルータ・PC②担当','LAN2 の機器が、LAN1（経理・サーバ室）とも通信できるようにする',tbl([row('PC②・ルータ','LAN1 の機器と ping で通信できること'),row('LAN1 の サーバ・PC①','アドレスは <b>Aさんに聞く</b>')]),'どの設定が必要かは、自分で考えましょう。')},
+ cfg:[{id:'cA',owner:'A',t:'サーバ・PC①に、出口（ゲートウェイ）が設定されている',ok:S=>eqd(S.dev.server.gw,SP.r1)&&eqd(S.dev.pc1.gw,SP.r1)},
+      {id:'cB',owner:'B',t:'PC②の出口と、ルータの転送が設定されている',ok:S=>eqd(S.dev.pc2.gw,SP.r2)&&!!S.dev.router.fwd}],
+ pings:[PG('p1','A','pc1',SP.pc2,'PC① から PC② へ ping で返事が来る'),PG('p2','A','server',SP.pc2,'サーバ から PC② へ ping で返事が来る'),
+        PG('p3','B','pc2',SP.sv,'PC② から サーバ へ ping で返事が来る'),PG('p4','B','pc2',SP.pc1,'PC② から PC① へ ping で返事が来る')],
+ hints:['別のネットワークへ出るには「出口（デフォルトゲートウェイ）」が必要です。出口になるのは、<b>自分と同じLANにいる</b>ルータのアドレスです。','荷物を受け取ったルータは、転送を許可しないと別のネットワークへ渡しません。ルータの設定画面を確認しよう。','ping が「タイムアウト」になるときは、<b>行きと帰り</b>の両方を疑おう。相手側のゲートウェイも確認してもらおう。','【答え】サーバ・PC①のゲートウェイ＝192.168.1.1／PC②のゲートウェイ＝192.168.2.1／ルータの「IPルーティング」を有効にする。']},
+{key:'s3',title:'DHCPで自動取得',kind:'build',base:100,secPer:12,
+ sheet:{A:sheet('A：サーバ・PC①担当','サーバでDHCPを動かし、PC①は自動取得にする',tbl([row('配布するアドレスの範囲','192.168.1.100 〜 192.168.1.150'),row('配るサブネットマスク','255.255.255.0'),row('配るゲートウェイ','ルータ（LAN1側）のアドレス'),row('DNSサーバー','使わない（空欄のまま）'),row('PC①','IPアドレスを自動的に取得する')]),'PC①が取得したアドレスは、<b>Bさんに伝える</b>こと。'),
+        B:sheet('B：ルータ・PC②担当','PC①がDHCPで取得したアドレスと、通信できることを確認する',tbl([row('PC①','Aさんが自動取得に切り替える'),row('確認すること','PC②・ルータから、PC①の<b>取得したアドレス</b>へ ping')]),'取得したアドレスは、Aさんに聞いてください。通らないときは、Aさんと一緒に原因を探そう。')},
+ cfg:[{id:'cA',owner:'A',t:'DHCPサーバとPC①が、要件どおり設定されている',ok:S=>{const d=S.dev.server.dhcp,l=S.dev.pc1.lease;return !!d.on&&eqd(d.start,'192.168.1.100')&&eqd(d.end,'192.168.1.150')&&eqd(d.mask,SP.m)&&eqd(d.gw,SP.r1)&&S.dev.pc1.mode==='dhcp'&&!!l&&eqd(l.gw,SP.r1)&&inPool(S);}}],
+ pings:[PG('p1','A','pc1',SP.sv,'PC① から サーバ へ ping で返事が来る'),PG('p2','A','pc1',SP.pc2,'PC① から PC② へ ping で返事が来る'),
+        PG('p3','B','pc2',S=>leaseIp(S),'PC② から PC①（取得したアドレス）へ ping で返事が来る'),PG('p4','B','router',S=>leaseIp(S),'ルータ から PC①（取得したアドレス）へ ping で返事が来る')],
+ hints:['DHCPの設定は、サーバ側（配る側）と、PC側（もらう側）の両方で必要です。','サーバの「適用」でメッセージが出たら、よく読もう。配布範囲に、固定で使っているアドレス（ルータ・サーバ）は含められません。','PC①が 169.254… のままなら、DHCPサービスが有効か確認して、ターミナルで <code>ipconfig /renew</code>。','別のネットワークと通信できないなら、<b>配るゲートウェイ</b>が空ではないか確認。変えたら、PC①で <code>ipconfig /renew</code>。','【答え】DHCP有効／範囲 192.168.1.100〜150／マスク 255.255.255.0／ゲートウェイ 192.168.1.1／PC①は「自動的に取得」→ ipconfig /renew。']},
+{key:'f1',title:'故障①',kind:'fault',fault:true,base:100,secPer:8,
+ sheet:{A:`<div class="tbox do"><b>🚨 障害報告</b><p>運用担当から連絡です。「<b>サーバ・PC①・PC②の間で、通信できない経路がある</b>」。さっきまでは、ぜんぶ動いていたはずです。</p><p>下の<b>4つの経路</b>が通るように、原因を見つけて直してください。自分の担当機器だけでなく、<b>相手と情報を出し合って</b>調べましょう。</p></div>`},
+ cfg:FAULT_CFG,pings:FAULT_PINGS,
+ hints:['まず、自分の担当機器から ping を打って、<b>どの経路が通らないか</b>を相手と共有しよう。','「General failure」は自分側の設定、「宛先ホストに到達できません」は、返事をした機器の先に相手がいないサインです。','自分の機器の <code>ipconfig</code>（ルータは <code>show ip interface brief</code>）を、最初に作った設定と見比べよう。','【答え】原因は2つ。①PC②のゲートウェイが 192.168.2.<b>2</b>（正：192.168.2.1）②DHCPで配るゲートウェイが空（正：192.168.1.1）→ サーバ側を直して、PC①で ipconfig /renew。']},
+{key:'f2',title:'故障②',kind:'fault',fault:true,base:100,secPer:8,
+ sheet:{A:`<div class="tbox do"><b>🚨 障害報告（第2報）</b><p>「また通信できなくなった」。今度は<b>原因が複数</b>あるようです。4つの経路がすべて通るように直してください。</p><p class="note">1つ直すと、次の症状が見えてくることがあります。直しては確認、を繰り返しましょう。</p></div>`},
+ cfg:FAULT_CFG,pings:FAULT_PINGS,
+ hints:['4つの経路すべてが「タイムアウト」なら、<b>途中の機器</b>を疑おう。','「タイムアウト」は、行きと帰りのどちらで止まったか分かりません。両側の機器（ゲートウェイ・転送・マスク）を確認しよう。','マスクが違うと、「同じ町」の範囲が変わります。両側の <code>ipconfig</code> を見せ合おう。','【答え】原因は3つ。①ルータのIPルーティングが無効 ②サーバのゲートウェイが空（正：192.168.1.1）③PC②のサブネットマスクが 255.255.<b>0.0</b>（正：255.255.255.0）']},
+{key:'f3',title:'故障③',kind:'fault',fault:true,base:100,secPer:8,
+ sheet:{A:`<div class="tbox do"><b>🚨 障害報告（最終）</b><p>「ネットワークがほぼ全滅」。<b>原因は4つ</b>、どれも担当機器の設定ミスです。4つの経路がすべて通るように直してください。</p><p class="note">アドレスの重複や、台帳と違うIPアドレスにも注意しよう。</p></div>`},
+ cfg:FAULT_CFG,pings:FAULT_PINGS,
+ hints:['まず、自分の担当機器の設定を、最初に作った設定と1項目ずつ見比べよう。','同じアドレスを2台が使うと、ping が成功したり失敗したりします。構成図に ⚠ が出ていませんか？','ルータのポートのアドレスが違うと、ゲートウェイの番地に誰もいなくなります。PC②の出口は、正しいアドレスを指していますか？','【答え】原因は4つ。①ルータのポート2が 192.168.2.<b>254</b>（正：192.168.2.1）②サーバのIPアドレスが 192.168.1.<b>100</b>（正：192.168.1.10。PC①と重複）③DHCPで配るゲートウェイが空 ④PC②のIPアドレスが 192.168.<b>1</b>.21（正：192.168.2.21）']}
+];
+const SCORE_FLOOR=10,HINT_COST=10;
+
+// ---------- 故障の注入 ----------
+function canonDev(){
+  const d=blankDevs();
+  d.router.if1={ip:SP.r1,mask:SP.m};d.router.if2={ip:SP.r2,mask:SP.m};d.router.fwd=true;
+  Object.assign(d.server,{ip:SP.sv,mask:SP.m,gw:SP.r1});
+  Object.assign(d.server.dhcp,{on:true,start:'192.168.1.100',end:'192.168.1.150',mask:SP.m,gw:SP.r1,dns:''});
+  Object.assign(d.pc1,{mode:'dhcp',ip:'',mask:'',gw:'',dns:'',lease:null});
+  Object.assign(d.pc2,{mode:'manual',ip:SP.pc2,mask:SP.m,gw:SP.r2,dns:'',lease:null});
+  return d;
+}
+async function injectFaults(key){
+  S.dev=canonDev();renew(S,'pc1');
+  const d=S.dev;
+  if(key==='f1'){d.pc2.gw='192.168.2.2';d.server.dhcp.gw='';if(d.pc1.lease)d.pc1.lease.gw='';}
+  if(key==='f2'){d.router.fwd=false;d.server.gw='';d.pc2.mask='255.255.0.0';}
+  if(key==='f3'){d.router.if2.ip='192.168.2.254';d.server.ip='192.168.1.100';d.server.dhcp.gw='';if(d.pc1.lease)d.pc1.lease.gw='';d.pc2.ip='192.168.1.21';}
+  const upd={};
+  Object.keys(DEVS).forEach(id=>{LASTW[id]=JSON.stringify(d[id]);upd[id]=d[id];});
+  await dbUpdate('teams/'+ME.team+'/dev',upd);
+  refreshAll(true);
+}
+
+// ---------- ステージ判定と進行 ----------
+const flagKey=(st,g)=>st.key+'_'+g.id;
+const flagOn=(st,g)=>!!(TEAM.prog&&TEAM.prog.flags&&TEAM.prog.flags[flagKey(st,g)]);
+const curStage=()=>{const p=TEAM.prog;return p&&p.phase!=null&&p.phase<STAGES.length?STAGES[p.phase]:null;};
+const stageComplete=st=>st.cfg.every(g=>g.ok(S))&&st.pings.every(g=>flagOn(st,g));
+let ADV_BUSY=false;
+async function tryAdvance(){
+  const p=TEAM.prog,st=curStage();
+  if(ADV_BUSY||!p||!st||!stageComplete(st))return;
+  ADV_BUSY=true;
+  try{
+    const r=await dbTxn('teams/'+ME.team+'/prog',cur=>{
+      if(!cur||cur.phase!==p.phase)return;
+      const now=Date.now(),sec=Math.floor((now-(cur.stageStart||now))/1000),hints=(cur.hints&&cur.hints[st.key])||0;
+      const score=Math.max(SCORE_FLOOR,st.base-Math.floor(sec/st.secPer)-HINT_COST*hints);
+      const n=Object.assign({},cur);
+      n.scores=Object.assign({},cur.scores||{},{[st.key]:score});
+      n.times=Object.assign({},cur.times||{},{[st.key]:sec});
+      n.total=(cur.total||0)+score;n.phase=cur.phase+1;n.stageStart=now;
+      if(n.phase>=STAGES.length)n.finishedAt=now;
+      return n;
+    });
+    if(r.committed){const nx=STAGES[p.phase+1];if(nx&&nx.fault)await injectFaults(nx.key);}
+  }finally{ADV_BUSY=false;}
+}
+function evaluate(){if(ME.role&&TEAM.prog)tryAdvance();}
+function onPingMeta(id,meta){
+  const st=curStage();if(!st||!meta||!mine(id))return;
+  st.pings.forEach(g=>{
+    if(g.src!==id||flagOn(st,g))return;
+    const dst=typeof g.dst==='function'?g.dst(S):g.dst;
+    if(dst&&meta.dst===dst&&meta.okc>0&&meta.okc===meta.n)dbSet('teams/'+ME.team+'/prog/flags/'+flagKey(st,g),true);
+  });
+}
+const _logPing=logPing;
+logPing=function(S_,id,meta){_logPing(S_,id,meta);try{onPingMeta(id,meta);}catch(e){}};
+
+// ---------- 同期 ----------
+function applyRemoteDev(v){
+  const base=blankDevs();let changedMine=false;
+  Object.keys(DEVS).forEach(id=>{
+    if(!v||!v[id])return;
+    const j=JSON.stringify(v[id]);
+    if(j===LASTW[id])return;
+    LASTW[id]=j;S.dev[id]=dmerge(base[id],v[id]);
+    if(mine(id))changedMine=true;
+  });
+  refreshAll(changedMine);
+}
+function syncOut(){
+  if(!ME.role)return;
+  OWN[ME.role].forEach(id=>{
+    const j=JSON.stringify(S.dev[id]);
+    if(j!==LASTW[id]){LASTW[id]=j;dbSet('teams/'+ME.team+'/dev/'+id,S.dev[id]);}
+  });
+}
+
+// ---------- 画面の上書き ----------
+const _renderPanel=renderPanel;
+renderPanel=function(){
+  if(!ME.role){$('pbody').innerHTML='';return;}
+  if(!mine(ui.dev)){
+    renderTabs();$('viewsw').innerHTML='';
+    $('pbody').innerHTML='<div class="lockbox">🔒 <b>'+DEVS[ui.dev].label+'</b> は、相手の担当機器です。<br>設定も画面も見られません。<b>相手に聞いて</b>、情報を集めましょう。<br><span class="note">ping や tracert で、相手の機器にアクセスして確認することはできます。</span></div>';
+    return;
+  }
+  if(ui.view==='web')ui.view='cfg';
+  _renderPanel();
+  [...document.querySelectorAll('#viewsw button')].forEach(b=>{if(b.textContent.indexOf('ブラウザ')>=0)b.remove();});
+};
+renderTabs=function(){
+  const cs=new Set(conflicts(S).filter(c=>c.devs.some(mine)).flatMap(c=>c.devs.filter(mine)));
+  $('tabs').innerHTML=Object.keys(DEVS).map(id=>'<button class="'+(ui.dev===id?'on':'')+'" onclick="selDev(\''+id+'\')"><span class="st '+(cs.has(id)?'conf':'')+'"></span>'+DEVS[id].label+(mine(id)?'':' 🔒')+'</button>').join('');
+};
+devIpText=function(id){
+  const e=eff(S,id);
+  if(!mine(id))return e.ifs.map(()=>'IP：？');
+  return e.ifs.map(i=>validIf(i)?i.ip:'IP未設定');
+};
+renderDiagram=function(){
+  const confAll=conflicts(S).filter(c=>c.devs.some(mine));
+  const confDevs=new Set(confAll.flatMap(c=>c.devs.filter(mine)));
+  const node=(id,x,y,w,h,icon,lines)=>{
+    const cls='node'+(ui.dev===id?' sel':'')+(confDevs.has(id)?' conf':'')+(mine(id)?'':' theirs');
+    let t='<g class="'+cls+'" data-id="'+id+'" onclick="selDev(\''+id+'\')">'+
+      '<rect class="nbox" x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="12"/>'+
+      '<text x="'+(x+w/2)+'" y="'+(y+24)+'" text-anchor="middle" font-size="15" font-weight="700" fill="#12263f">'+icon+' '+DEVS[id].label+(confDevs.has(id)?' ⚠':'')+(mine(id)?'':' 🔒')+'</text>';
+    lines.forEach((l,k)=>{t+='<text x="'+(x+w/2)+'" y="'+(y+46+k*18)+'" text-anchor="middle" font-size="12.5" font-family="Consolas,monospace" fill="'+(l.indexOf('未設定')>=0||l.indexOf('？')>=0?'#9ca3af':'#1f2937')+'">'+esc(l)+'</text>';});
+    return t+'</g>';
+  };
+  const r=devIpText('router');
+  let s='';
+  s+='<path class="link" d="M160 80 H215 V250 H160"/><path class="link" d="M215 165 H330"/>';
+  s+='<g><path class="link" d="M430 165 H600"/><text class="lan" x="515" y="153" text-anchor="middle">LAN2（営業部）</text></g>';
+  s+='<text class="lan" x="225" y="150">LAN1</text><text class="lan" x="225" y="196">（経理・サーバ室）</text>';
+  s+=node('pc1',40,45,120,70,'🖥',devIpText('pc1'));
+  s+=node('server',40,215,120,70,'🗄',devIpText('server'));
+  s+=node('router',330,125,100,84,'📡',['①'+r[0],'②'+r[1]].map(x=>x.replace('IP未設定','未設定')));
+  s+=node('pc2',600,130,120,70,'🖥',devIpText('pc2'));
+  if(mine('router')){const fwd=S.dev.router.fwd;
+    s+='<g><rect x="338" y="218" width="84" height="22" rx="11" fill="'+(fwd?'#16a34a':'#9ca3af')+'"/><text x="380" y="234" text-anchor="middle" font-size="12" fill="#fff">転送 '+(fwd?'ON':'OFF')+'</text></g>';}
+  const dp=['pc1','pc2'].filter(id=>mine(id)&&S.dev[id].mode==='dhcp').map(id=>DEVS[id].label+(eff(S,id).apipa?'：自動構成IP(169.254…)':'：DHCP取得')).join(' / ');
+  if(dp)s+='<text x="380" y="300" text-anchor="middle" font-size="12" fill="#6b7280">'+esc(dp)+'</text>';
+  if(confAll.length)s+='<text x="380" y="320" text-anchor="middle" font-size="13" fill="#dc2626" font-weight="700">⚠ IPアドレス競合：'+esc(confAll.map(c=>c.ip).join(', '))+'</text>';
+  $('diagram').innerHTML=s;
+};
+// サーバ設定画面（DNS・Webは使わない）
+formServer=function(){
+  const d=S.dev.server,dh=d.dhcp;
+  return '<div class="win"><div class="wt">サーバ設定画面</div><div class="wb">'+
+   '<div class="sec">ネットワーク</div><div class="fld wide"><span>IP アドレス:</span><input type="text" id="s-ip" value="'+v(d.ip)+'"><span>サブネット マスク:</span><input type="text" id="s-mask" value="'+v(d.mask)+'"><span>デフォルト ゲートウェイ:</span><input type="text" id="s-gw" value="'+v(d.gw)+'"></div>'+
+   '<div class="sec">DHCPサービス</div><label class="r"><input type="checkbox" id="dh-on" '+(dh.on?'checked':'')+'> DHCPサービスを有効にする</label>'+
+   '<div class="fld wide"><span>配布開始アドレス:</span><input type="text" id="dh-start" value="'+v(dh.start)+'"><span>配布終了アドレス:</span><input type="text" id="dh-end" value="'+v(dh.end)+'"><span>配るサブネットマスク:</span><input type="text" id="dh-mask" value="'+v(dh.mask)+'"><span>配るゲートウェイ:</span><input type="text" id="dh-gw" value="'+v(dh.gw)+'"></div>'+
+   '</div><div class="wf"><button class="btn" onclick="applyServer()">適用</button></div></div>'+
+   '<div class="tip">DHCPで配る内容を変えたときは、PC側で <code>ipconfig /renew</code> が必要です。</div>';
+};
+applyServer=function(){
+  const d=S.dev.server,errs=[];
+  const ip=gv('s-ip'),mask=gv('s-mask'),gw=gv('s-gw');
+  if(ip2n(ip)===null)errs.push('サーバのIPアドレスの形式が正しくありません');
+  if(!maskOk(mask))errs.push('サーバのサブネットマスクが正しくありません');
+  if(gw&&ip2n(gw)===null)errs.push('サーバのゲートウェイの形式が正しくありません');
+  const dh={on:$('dh-on').checked,start:gv('dh-start'),end:gv('dh-end'),mask:gv('dh-mask'),gw:gv('dh-gw'),dns:d.dhcp.dns||''};
+  ['start','end','gw'].forEach(k=>{if(dh[k]&&ip2n(dh[k])===null)errs.push('DHCPの「'+({start:'配布開始',end:'配布終了',gw:'ゲートウェイ'}[k])+'」の形式が正しくありません');});
+  if(!errs.length){
+    [addrProblem(ip,mask,'サーバのIPアドレス'),gwProblem(ip,mask,gw)].forEach(x=>{if(x)errs.push(x);});
+    if(dh.on){
+      if(!maskOk(dh.mask))errs.push('DHCPの「配るサブネットマスク」が正しくありません（例: 255.255.255.0）');
+      else if(!dh.start||!dh.end)errs.push('DHCPの配布開始・配布終了を入力してください');
+      else{
+        const a=ip2n(dh.start),b=ip2n(dh.end),m=ip2n(dh.mask);
+        if(a>b)errs.push('DHCPの配布開始が配布終了より後になっています');
+        else{
+          const ref=dh.gw||ip;
+          if(!sameNet(dh.start,ref,dh.mask)||!sameNet(dh.end,ref,dh.mask))errs.push('DHCPの配布範囲が、配るゲートウェイ（'+ref+'）と同じネットワークの内側にありません');
+          const net=(a&m)>>>0,bc=(net|((~m)>>>0))>>>0;
+          if(a<=net&&net<=b)errs.push('DHCPの配布範囲に、ネットワークアドレス（'+n2ip(net)+'）が含まれています');
+          if(a<=bc&&bc<=b)errs.push('DHCPの配布範囲に、ブロードキャストアドレス（'+n2ip(bc)+'）が含まれています');
+          const fixed=[ip,dh.gw,S.dev.router.if1.ip,S.dev.router.if2.ip].filter(x=>x&&ip2n(x)!==null);
+          [...new Set(fixed)].forEach(f=>{const x=ip2n(f);if(x>=a&&x<=b)errs.push('DHCPの配布範囲に、固定で使っているアドレス '+f+' が含まれています（競合のもとです）');});
+        }
+      }
+    }
+  }
+  if(errs.length){showMsg('err',errs);return;}
+  Object.assign(d,{ip,mask,gw});d.dhcp=dh;
+  ui.msg={type:'okm',lines:['設定を適用しました。（DHCPで配る内容を変えたときは、PC側で ipconfig /renew が必要です）']};
+  afterChange();renderPanel();
+};
+save=function(){};
+afterChange=function(){renderDiagram();renderPair();renderTabs();syncOut();evaluate();};
+renderHeader=function(){};
+applyFocus=function(){};
+
+// ---------- 左パネル：ペア画面 ----------
+const fmt=s=>{s=Math.max(0,Math.floor(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');};
+const online=m=>m&&Date.now()-(m.seen||0)<45000;
+function stageScore(st,p){const sec=(Date.now()-(p.stageStart||Date.now()))/1000,h=(p.hints&&p.hints[st.key])||0;return Math.max(SCORE_FLOOR,st.base-Math.floor(sec/st.secPer)-HINT_COST*h);}
+function renderPair(){
+  const el=$('mission');if(!el)return;
+  if(!ME.role){el.innerHTML='';return;}
+  const other=ME.role==='A'?'B':'A',om=TEAM.members[other],p=TEAM.prog,both=!!(TEAM.members.A&&TEAM.members.B);
+  let h='<div class="chips"><span class="chip">チーム '+ME.team+'</span><span class="chip me">あなた：'+ROLE_LABEL[ME.role]+'</span></div>';
+  h+='<div class="note">相棒：'+(om?esc(om.name)+(online(om)?' 🟢':' ⚪（接続待ち）'):'まだ入室していません…')+'</div>';
+  const dm=document.querySelectorAll('#diagramwrap,#panel');
+  if(!both){h+='<div class="tbox why"><b>⏳ 相棒を待っています</b>同じチーム番号（'+ME.team+'）で、もう1人が入室すると始められます。</div>';dm.forEach(e=>e.classList.add('lockedx'));el.innerHTML=h;return;}
+  if(!p||p.phase==null){
+    h+='<div class="tbox do"><b>🏁 ルール</b><ul><li>この実習は、<b>白紙のネットワーク</b>を、2人で協力して作ります。</li><li>自分の担当機器だけ操作できます。<b>相手の機器の設定は見えません</b>。</li><li>要件書は<b>半分ずつ</b>です。口頭で情報を出し合いましょう。</li><li>得点は<b>時間とヒントの回数</b>で決まります。</li><li>完成したチームは、<b>故障ラウンド</b>に進みます。</li></ul></div><button class="btn" onclick="startTeam()">スタート！（どちらか1人が押す）</button>';
+    dm.forEach(e=>e.classList.add('lockedx'));el.innerHTML=h;return;
+  }
+  dm.forEach(e=>e.classList.remove('lockedx'));
+  const st=curStage();
+  h+='<div class="sdots">'+STAGES.map((s,i)=>'<span class="sd '+(i<p.phase?'done':i===p.phase?'cur':'')+(s.fault?' f':'')+'" title="'+esc(s.title)+'">'+(i<p.phase?'✓':(s.fault?'⚠':(i+1)))+'</span>').join('')+'</div>';
+  h+='<div class="scorebar">合計 <b>'+(p.total||0)+'</b> 点</div>';
+  if(!st){
+    h+='<div class="clear"><h4>🎓 全ステージクリア！</h4><p>合計 <b>'+(p.total||0)+'</b> 点。おつかれさま！</p><table class="sheet"><tr><th>ステージ</th><th>時間</th><th>得点</th></tr>'+STAGES.map(s=>'<tr><td>'+esc(s.title)+'</td><td>'+fmt((p.times||{})[s.key])+'</td><td>'+((p.scores||{})[s.key]||0)+'</td></tr>').join('')+'</table></div>';
+    el.innerHTML=h;return;
+  }
+  const hc=(p.hints&&p.hints[st.key])||0;
+  h+='<h2 style="margin-top:6px">'+(st.fault?'⚠ ':'')+'ステージ '+(p.phase+1)+'：'+esc(st.title)+'</h2>';
+  h+='<div class="timerbar">⏱ <b id="pr-timer">'+fmt((Date.now()-p.stageStart)/1000)+'</b>　見込み <b id="pr-score">'+stageScore(st,p)+'</b> 点　💡 ヒント '+hc+'/'+st.hints.length+'回</div>';
+  h+=st.sheet[ME.role]||st.sheet.A;
+  h+='<h3>✅ 達成条件</h3><ul class="goals">';
+  st.cfg.forEach(g=>{const ok=g.ok(S);h+='<li class="'+(ok?'ok':'')+'"><span class="mk">'+(ok?'✓':'')+'</span><span>'+(g.owner==='both'?'':'<b>['+g.owner+']</b> ')+esc(g.t)+'</span></li>';});
+  st.pings.forEach(g=>{const ok=flagOn(st,g);h+='<li class="'+(ok?'ok':'')+'"><span class="mk">'+(ok?'✓':'')+'</span><span><b>['+g.owner+']</b> '+esc(g.t)+'</span></li>';});
+  h+='</ul><p class="note">[A][B] はその操作をする担当です。ping は、担当の機器のターミナルから打ちます。</p>';
+  for(let k=0;k<hc&&k<st.hints.length;k++)h+='<div class="hintbox"><b>ヒント'+(k+1)+'：</b>'+st.hints[k]+'</div>';
+  if(hc<st.hints.length)h+='<button class="btn ghost" onclick="useHint()">'+(hc?'次のヒントを見る':'詰まったらヒント')+'（−'+HINT_COST+'点）</button>';
+  el.innerHTML=h;
+}
+renderMission=renderPair;
+renderAll=function(){renderDiagram();renderPair();renderPanel();};
+function refreshAll(panel){renderDiagram();renderPair();renderTabs();if(panel)renderPanel();evaluate();}
+async function startTeam(){await dbTxn('teams/'+ME.team+'/prog',cur=>cur||{phase:0,startedAt:Date.now(),stageStart:Date.now(),total:0});}
+async function useHint(){
+  const st=curStage();if(!st)return;
+  const p=TEAM.prog,hc=(p.hints&&p.hints[st.key])||0;if(hc>=st.hints.length)return;
+  await dbTxn('teams/'+ME.team+'/prog/hints/'+st.key,c=>Math.min(st.hints.length,(c||0)+1));
+}
+setInterval(()=>{const p=TEAM.prog,st=curStage(),t=$('pr-timer');if(!p||!st||!t)return;t.textContent=fmt((Date.now()-p.stageStart)/1000);const sc=$('pr-score');if(sc)sc.textContent=stageScore(st,p);},1000);
+
+// ---------- 入室 ----------
+const SKEY='netpair_me_v1';
+function showLogin(msg){
+  $('login').style.display='flex';
+  $('lg-msg').textContent=msg||'';
+  $('lg-mode').textContent=USE_FB?'':'⚠ テストモード（Firebase未設定）：同じブラウザの別タブどうしでペアになります。';
+  try{const o=JSON.parse(localStorage.getItem(SKEY)||'null');if(o){$('lg-name').value=o.name||'';$('lg-team').value=o.team||'1';}}catch(e){}
+}
+async function doJoin(){
+  const name=$('lg-name').value.trim().slice(0,12),team=String(parseInt($('lg-team').value,10)||0);
+  if(!name){$('lg-msg').textContent='名前を入力してください';return;}
+  if(team==='0'){$('lg-msg').textContent='チーム番号を選んでください';return;}
+  let role=null,prevRole=null;
+  try{const o=JSON.parse(localStorage.getItem(SKEY)||'null');if(o&&o.team===team&&o.name===name)prevRole=o.role;}catch(e){}
+  const r=await dbTxn('teams/'+team+'/members',cur=>{
+    cur=cur||{};
+    if(prevRole&&cur[prevRole]&&cur[prevRole].name===name){role=prevRole;cur[prevRole].seen=Date.now();return cur;}
+    for(const k of ['A','B']){if(cur[k]&&cur[k].name===name&&Date.now()-(cur[k].seen||0)>45000){role=k;cur[k].seen=Date.now();return cur;}}
+    for(const k of ['A','B']){if(!cur[k]){role=k;cur[k]={name,seen:Date.now()};return cur;}}
+    role=null;return;
+  });
+  if(!r.committed||!role){$('lg-msg').textContent='このチームは満員です。別のチーム番号を選んでください。';return;}
+  try{localStorage.setItem(SKEY,JSON.stringify({team,name,role}));}catch(e){}
+  enterTeam(team,name,role);
+}
+function enterTeam(team,name,role){
+  ME.team=team;ME.name=name;ME.role=role;
+  $('login').style.display='none';
+  S.dev=blankDevs();ui.dev=OWN[role][0];ui.view='cfg';
+  $('hd-team').textContent='チーム '+team+'　'+ROLE_LABEL[role];
+  dbOn('teams/'+team+'/members',v=>{TEAM.members=v||{};renderPair();});
+  dbOn('teams/'+team+'/dev',v=>applyRemoteDev(v));
+  dbOn('teams/'+team+'/prog',v=>{const prev=TEAM.prog;TEAM.prog=v;
+    if(v&&prev&&v.phase!==prev.phase){Object.keys(TERM).forEach(k=>TERM[k]=[]);toast(curStage()?'ステージ '+(v.phase+1)+'：'+curStage().title:'🎓 全ステージクリア！');}
+    renderPair();evaluate();});
+  setInterval(()=>dbSet('teams/'+ME.team+'/members/'+ME.role+'/seen',Date.now()),15000);
+  renderAll();
+}
+function leaveTeam(){try{localStorage.removeItem(SKEY);}catch(e){}location.reload();}
+
+// ---------- 先生用画面 ----------
+let TALL={};
+function renderTeacher(){
+  const ids=Object.keys(TALL).sort((a,b)=>+a-+b);
+  const rows=ids.map(id=>{
+    const t=TALL[id]||{},m=t.members||{},p=t.prog||{},st=p.phase!=null&&p.phase<STAGES.length?STAGES[p.phase]:null;
+    const hints=Object.values(p.hints||{}).reduce((a,b)=>a+b,0);
+    const tag=n=>m[n]?esc(m[n].name)+(online(m[n])?' 🟢':' ⚪'):'—';
+    const status=p.phase==null?(m.A&&m.B?'開始待ち':'人数待ち'):(p.finishedAt?'🎓 完了':(st.fault?'⚠ ':'')+esc(st.title));
+    const prog=p.phase==null?0:Math.min(p.phase,STAGES.length);
+    return {id,html:'<tr><td>'+id+'</td><td>'+tag('A')+'</td><td>'+tag('B')+'</td><td>'+status+'</td><td><div class="pb"><i style="width:'+Math.round(prog/STAGES.length*100)+'%"></i></div>'+prog+'/'+STAGES.length+'</td><td>'+(p.stageStart&&st?fmt((Date.now()-p.stageStart)/1000):'—')+'</td><td>'+hints+'</td><td><b>'+(p.total||0)+'</b></td><td><button class="btn ghost" onclick="resetTeam(\''+id+'\')">リセット</button></td></tr>',total:p.total||0,prog};
+  });
+  rows.sort((a,b)=>b.prog-a.prog||b.total-a.total);
+  $('t-body').innerHTML=rows.map(r=>r.html).join('')||'<tr><td colspan="9" class="note">まだ入室したチームはありません。</td></tr>';
+}
+function resetTeam(id){if(confirm('チーム '+id+' を、入室状態も含めて削除します。よろしいですか？'))dbRemove('teams/'+id);}
+function resetAllTeams(){if(confirm('全チームのデータを削除します。よろしいですか？'))dbRemove('teams');}
+
+// ---------- 起動 ----------
+(async function boot(){
+  const sel=$('lg-team');for(let i=1;i<=30;i++){const o=document.createElement('option');o.value=i;o.textContent=i;sel.appendChild(o);}
+  try{await initDB();}catch(e){document.body.innerHTML='<p style="padding:20px">Firebase の読み込みに失敗しました：'+esc(e.message)+'</p>';return;}
+  if(TEACHER){
+    document.querySelector('main').style.display='none';document.querySelector('header').style.display='none';
+    $('teacher').style.display='block';$('login').style.display='none';
+    $('t-mode').textContent=USE_FB?'Firebase 接続':'⚠ テストモード（Firebase未設定・同じブラウザの別タブのみ）';
+    dbOn('teams',v=>{TALL=v||{};renderTeacher();});
+    setInterval(renderTeacher,2000);
+    return;
+  }
+  document.querySelectorAll('#diagramwrap,#panel').forEach(e=>e.classList.add('lockedx'));
+  let me=null;try{me=JSON.parse(localStorage.getItem(SKEY)||'null');}catch(e){}
+  showLogin();
+})();
+</script>
+</body>
+</html>

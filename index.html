@@ -1216,9 +1216,9 @@ renderAll();
 <script>
 // ====================================================================
 //  ペア対戦レイヤー（Firebase Realtime Database で2人の状態を共有する）
-//  ・FIREBASE_CONFIG を埋めると Firebase、空のままだと「同じブラウザの別タブ」で動くテストモード
+//  ・FIREBASE_CONFIG に databaseURL があれば Firebase、無ければ「同じブラウザの別タブ」で動くテストモード（?db=local で強制）
 // ====================================================================
-const firebaseConfig = {
+const FIREBASE_CONFIG={
   apiKey: "AIzaSyDUGvhCpX8SRfiq2NYpf0YAHzTBoBd_k10",
   authDomain: "networkbuildinggame.firebaseapp.com",
   databaseURL: "https://networkbuildinggame-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -1229,7 +1229,7 @@ const firebaseConfig = {
 };
 const ROOT='netpair/v1';
 const URLQ=new URLSearchParams(location.search);
-const TEACHER=URLQ.get('teacher')==='1';
+const TEACHER=window.FORCE_TEACHER===true||URLQ.get('teacher')==='1';
 const USE_FB=!!(FIREBASE_CONFIG&&FIREBASE_CONFIG.databaseURL)&&URLQ.get('db')!=='local';
 
 // ---------- DB 抽象化 ----------

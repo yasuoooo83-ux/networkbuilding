@@ -1218,9 +1218,14 @@ renderAll();
 //  ペア対戦レイヤー（Firebase Realtime Database で2人の状態を共有する）
 //  ・FIREBASE_CONFIG を埋めると Firebase、空のままだと「同じブラウザの別タブ」で動くテストモード
 // ====================================================================
-const FIREBASE_CONFIG={
-  // apiKey:'', authDomain:'', databaseURL:'https://xxxx-default-rtdb.asia-southeast1.firebasedatabase.app',
-  // projectId:'', appId:''
+const firebaseConfig = {
+  apiKey: "AIzaSyDUGvhCpX8SRfiq2NYpf0YAHzTBoBd_k10",
+  authDomain: "networkbuildinggame.firebaseapp.com",
+  databaseURL: "https://networkbuildinggame-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "networkbuildinggame",
+  storageBucket: "networkbuildinggame.firebasestorage.app",
+  messagingSenderId: "795457639530",
+  appId: "1:795457639530:web:9031eb0b4ad93b7d7d6613"
 };
 const ROOT='netpair/v1';
 const URLQ=new URLSearchParams(location.search);
